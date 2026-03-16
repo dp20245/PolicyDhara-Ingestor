@@ -1,0 +1,14 @@
+# Global owners
+* @Varnasr
+
+# Data pipeline
+/scripts/ @Varnasr
+
+# Frontend
+/src/ @Varnasr
+
+# Data
+/data/ @Varnasr
+
+# CI/CD
+/.github/ @Varnasr
