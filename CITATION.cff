@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use PolicyDhara in your research, please cite it as below."
+type: software
+title: "PolicyDhara: Auto-updating Indian Development Policy Tracker"
+authors:
+  - family-names: Raman
+    given-names: Varna Sri
+url: "https://github.com/Varnasr/PolicyDhara"
+repository-code: "https://github.com/Varnasr/PolicyDhara"
+license: MIT
+keywords:
+  - india
+  - policy-tracker
+  - development
+  - government
+  - public-policy
+  - south-asia
+date-released: "2025-01-01"
