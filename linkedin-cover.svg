@@ -104,7 +104,7 @@
     Tracking 2,000+ development policies across
   </text>
   <text x="115" y="283" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="20" fill="#cbd5e1">
-    23 sectors from 77 sources — updated every 6 hours
+    23 sectors from 310 sources — updated every 6 hours
   </text>
 
   <!-- Stats cards — cyan, purple, green (no saffron) -->
@@ -122,7 +122,7 @@
 
   <g transform="translate(465, 320)">
     <rect width="140" height="85" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1" opacity="0.9"/>
-    <text x="20" y="35" font-family="'Segoe UI', Arial, sans-serif" font-size="32" font-weight="bold" fill="#10b981" filter="url(#glow)">77</text>
+    <text x="20" y="35" font-family="'Segoe UI', Arial, sans-serif" font-size="32" font-weight="bold" fill="#10b981" filter="url(#glow)">310</text>
     <text x="20" y="60" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#94a3b8" letter-spacing="1">SOURCES</text>
   </g>
 

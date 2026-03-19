@@ -1,6 +1,6 @@
 # PolicyDhara: Building an Open-Source Policy Intelligence Engine for India
 
-*How we automated the tracking of 2,000+ development policies across 23 sectors and 77 sources — and why it matters.*
+*How we automated the tracking of 2,000+ development policies across 23 sectors and 310 sources — and why it matters.*
 
 ---
 
