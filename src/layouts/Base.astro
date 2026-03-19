@@ -94,99 +94,72 @@ const canonicalUrl = Astro.url.href;
               Explore
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
-            <div class="nav-dropdown-menu">
-              <a href={`${base}budget/`}>
-                <span class="nav-menu-icon">$</span>
-                <span class="nav-menu-text">
-                  <span class="nav-menu-label">Budget</span>
-                  <span class="nav-menu-desc">Union budget tracking and fiscal analysis</span>
-                </span>
-              </a>
-              <a href={`${base}parliament/`}>
-                <span class="nav-menu-icon">P</span>
-                <span class="nav-menu-text">
-                  <span class="nav-menu-label">Parliament</span>
-                  <span class="nav-menu-desc">Bills, debates, and legislative activity</span>
-                </span>
-              </a>
-              <a href={`${base}intelligence/`}>
-                <span class="nav-menu-icon">I</span>
-                <span class="nav-menu-text">
-                  <span class="nav-menu-label">Intelligence</span>
-                  <span class="nav-menu-desc">AI-powered policy insights and trends</span>
-                </span>
-              </a>
-              <a href={`${base}graph/`}>
-                <span class="nav-menu-icon">G</span>
-                <span class="nav-menu-text">
-                  <span class="nav-menu-label">Knowledge Graph</span>
-                  <span class="nav-menu-desc">Visual map of policy connections across sectors</span>
-                </span>
-              </a>
-              <a href={`${base}continuity/`}>
-                <span class="nav-menu-icon">C</span>
-                <span class="nav-menu-text">
-                  <span class="nav-menu-label">Continuity</span>
-                  <span class="nav-menu-desc">Policy evolution across governments</span>
-                </span>
-              </a>
-              <a href={`${base}compare/`}>
-                <span class="nav-menu-icon">~</span>
-                <span class="nav-menu-text">
-                  <span class="nav-menu-label">Compare</span>
-                  <span class="nav-menu-desc">Side-by-side policy comparison tool</span>
-                </span>
-              </a>
-              <a href={`${base}amendments/`}>
-                <span class="nav-menu-icon">A</span>
-                <span class="nav-menu-text">
-                  <span class="nav-menu-label">Amendments</span>
-                  <span class="nav-menu-desc">Track policy changes and text diffs</span>
-                </span>
-              </a>
-              <a href={`${base}digest/`}>
-                <span class="nav-menu-icon">D</span>
-                <span class="nav-menu-text">
-                  <span class="nav-menu-label">Daily Digest</span>
-                  <span class="nav-menu-desc">Daily summary of policy activity</span>
-                </span>
-              </a>
-              <div class="nav-dropdown-divider"></div>
-              <a href={`${base}states/`}>
-                <span class="nav-menu-icon">S</span>
-                <span class="nav-menu-text">
-                  <span class="nav-menu-label">States</span>
-                  <span class="nav-menu-desc">State-level policy tracker</span>
-                </span>
-              </a>
-              <a href={`${base}bookmarks/`}>
-                <span class="nav-menu-icon">B</span>
-                <span class="nav-menu-text">
-                  <span class="nav-menu-label">Reading List</span>
-                  <span class="nav-menu-desc">Your bookmarked policies</span>
-                </span>
-              </a>
-              <a href={`${base}sources/`}>
-                <span class="nav-menu-icon">#</span>
-                <span class="nav-menu-text">
-                  <span class="nav-menu-label">Sources</span>
-                  <span class="nav-menu-desc">100+ government, media, and research sources</span>
-                </span>
-              </a>
-              <a href={`${base}api/`}>
-                <span class="nav-menu-icon">/</span>
-                <span class="nav-menu-text">
-                  <span class="nav-menu-label">API</span>
-                  <span class="nav-menu-desc">Open data API for developers</span>
-                </span>
-              </a>
-              <a href={`${base}about/`}>
-                <span class="nav-menu-icon">?</span>
-                <span class="nav-menu-text">
-                  <span class="nav-menu-label">About</span>
-                  <span class="nav-menu-desc">About PolicyDhara and ImpactMojo</span>
-                </span>
-              </a>
+            <div class="nav-dropdown-menu nav-dropdown-grouped">
+              <div class="nav-dropdown-columns">
+                <div class="nav-dropdown-col">
+                  <span class="nav-group-heading">Analysis</span>
+                  <a href={`${base}budget/`}>
+                    <span class="nav-menu-icon">$</span>
+                    <span class="nav-menu-label">Budget</span>
+                  </a>
+                  <a href={`${base}parliament/`}>
+                    <span class="nav-menu-icon">P</span>
+                    <span class="nav-menu-label">Parliament</span>
+                  </a>
+                  <a href={`${base}intelligence/`}>
+                    <span class="nav-menu-icon">I</span>
+                    <span class="nav-menu-label">Intelligence</span>
+                  </a>
+                  <a href={`${base}graph/`}>
+                    <span class="nav-menu-icon">G</span>
+                    <span class="nav-menu-label">Knowledge Graph</span>
+                  </a>
+
+                  <span class="nav-group-heading">Track</span>
+                  <a href={`${base}continuity/`}>
+                    <span class="nav-menu-icon">C</span>
+                    <span class="nav-menu-label">Continuity</span>
+                  </a>
+                  <a href={`${base}compare/`}>
+                    <span class="nav-menu-icon">~</span>
+                    <span class="nav-menu-label">Compare</span>
+                  </a>
+                  <a href={`${base}amendments/`}>
+                    <span class="nav-menu-icon">A</span>
+                    <span class="nav-menu-label">Amendments</span>
+                  </a>
+                </div>
+
+                <div class="nav-dropdown-col">
+                  <span class="nav-group-heading">Browse</span>
+                  <a href={`${base}digest/`}>
+                    <span class="nav-menu-icon">D</span>
+                    <span class="nav-menu-label">Daily Digest</span>
+                  </a>
+                  <a href={`${base}states/`}>
+                    <span class="nav-menu-icon">S</span>
+                    <span class="nav-menu-label">States</span>
+                  </a>
+                  <a href={`${base}bookmarks/`}>
+                    <span class="nav-menu-icon">B</span>
+                    <span class="nav-menu-label">Reading List</span>
+                  </a>
+                  <a href={`${base}sources/`}>
+                    <span class="nav-menu-icon">#</span>
+                    <span class="nav-menu-label">Sources</span>
+                  </a>
+
+                  <span class="nav-group-heading">Meta</span>
+                  <a href={`${base}api/`}>
+                    <span class="nav-menu-icon">/</span>
+                    <span class="nav-menu-label">API</span>
+                  </a>
+                  <a href={`${base}about/`}>
+                    <span class="nav-menu-icon">?</span>
+                    <span class="nav-menu-label">About</span>
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
           <a href={`${base}rss.xml`} class="nav-rss" title="RSS Feed">
