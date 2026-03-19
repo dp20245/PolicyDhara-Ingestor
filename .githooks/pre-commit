@@ -13,13 +13,12 @@ SENSITIVE_PATTERNS=('.env' '.env.local' '.env.production' 'credentials.json' '*.
 STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
 
 for pattern in "${SENSITIVE_PATTERNS[@]}"; do
-  while IFS= read -r file; do
-    if [[ -n "$file" ]]; then
-      echo -e "${RED}BLOCKED:${NC} Refusing to commit sensitive file: $file"
-      echo "If this is intentional, use: git commit --no-verify"
-      exit 1
-    fi
-  done < <(echo "$STAGED_FILES" | grep -E "^${pattern//\*/.*}$" 2>/dev/null || true)
+  MATCHED=$(echo "$STAGED_FILES" | grep -E "^${pattern//\*/.*}$" 2>/dev/null || true)
+  if [ -n "$MATCHED" ]; then
+    echo -e "${RED}BLOCKED:${NC} Refusing to commit sensitive file: $MATCHED"
+    echo "If this is intentional, use: git commit --no-verify"
+    exit 1
+  fi
 done
 
 # 2. Check for debug/console statements in staged JS/TS/Python files
@@ -44,7 +43,7 @@ fi
 # 3. Check for merge conflict markers
 if [ -n "$STAGED_FILES" ]; then
   while IFS= read -r file; do
-    if [ -f "$file" ] && grep -rn '<<<<<<<\|=======\|>>>>>>>' "$file" > /dev/null 2>&1; then
+    if [ -f "$file" ] && grep -n -E '^<{7}|^={7}|^>{7}' "$file" > /dev/null 2>&1; then
       echo -e "${RED}BLOCKED:${NC} Merge conflict markers found in $file"
       exit 1
     fi
