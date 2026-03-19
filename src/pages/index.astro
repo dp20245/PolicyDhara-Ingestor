@@ -19,13 +19,24 @@ const base = rawBase.endsWith('/') ? rawBase : rawBase + '/';
 // Compute live stats
 const now = Date.now();
 const DAY = 86400000;
-const last24h = policies.filter(p => now - new Date(p.date).getTime() < DAY).length;
 const last7d = policies.filter(p => now - new Date(p.date).getTime() < 7 * DAY).length;
 
-// For "this week" display: if nearly all policies are within 7 days,
-// the data lacks historical dates — show last 24h count instead
-const weekStatLabel = last7d > meta.total_policies * 0.8 ? 'today' : 'this week';
-const weekStatNum = last7d > meta.total_policies * 0.8 ? last24h : last7d;
+// Count distinct dates to check if data spans multiple periods
+const distinctDates = new Set(policies.map(p => p.date)).size;
+const dataSpansHistory = distinctDates > 14 && last7d < meta.total_policies * 0.8;
+
+let weekStatNum: number;
+let weekStatLabel: string;
+if (dataSpansHistory) {
+  weekStatNum = last7d;
+  weekStatLabel = 'this week';
+} else {
+  // Data is mostly recent — show latest update date count instead
+  const latestDate = policies[0]?.date || '';
+  const latestCount = policies.filter(p => p.date === latestDate).length;
+  weekStatNum = latestCount;
+  weekStatLabel = 'latest';
+}
 ---
 <Base title="Dashboard">
 
