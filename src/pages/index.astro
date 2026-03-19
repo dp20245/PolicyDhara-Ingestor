@@ -10,17 +10,44 @@ import TrendChart from '../components/TrendChart.astro';
 import NewsletterBar from '../components/NewsletterBar.astro';
 import { getAllPolicies, getMeta } from '../lib/data';
 
-const policies = getAllPolicies();
+const allPolicies = getAllPolicies();
 const meta = getMeta();
 const INITIAL_SHOW = 20;
 const rawBase = import.meta.env.BASE_URL;
 const base = rawBase.endsWith('/') ? rawBase : rawBase + '/';
 
+// Rotate lead story among top candidates so each build features a different policy
+const LEAD_POOL = 10;
+const buildDay = Math.floor(Date.now() / 86400000); // changes daily
+const leadIdx = buildDay % Math.min(LEAD_POOL, allPolicies.length);
+// Move the featured policy to position 0, keep the rest in order
+const policies = [...allPolicies];
+if (leadIdx > 0 && leadIdx < policies.length) {
+  const [featured] = policies.splice(leadIdx, 1);
+  policies.unshift(featured);
+}
+
 // Compute live stats
 const now = Date.now();
 const DAY = 86400000;
-const last24h = policies.filter(p => now - new Date(p.date).getTime() < DAY).length;
 const last7d = policies.filter(p => now - new Date(p.date).getTime() < 7 * DAY).length;
+
+// Count distinct dates to check if data spans multiple periods
+const distinctDates = new Set(policies.map(p => p.date)).size;
+const dataSpansHistory = distinctDates > 14 && last7d < meta.total_policies * 0.8;
+
+let weekStatNum: number;
+let weekStatLabel: string;
+if (dataSpansHistory) {
+  weekStatNum = last7d;
+  weekStatLabel = 'this week';
+} else {
+  // Data is mostly recent — show latest update date count instead
+  const latestDate = policies[0]?.date || '';
+  const latestCount = policies.filter(p => p.date === latestDate).length;
+  weekStatNum = latestCount;
+  weekStatLabel = 'latest';
+}
 ---
 <Base title="Dashboard">
 
@@ -48,8 +75,8 @@ const last7d = policies.filter(p => now - new Date(p.date).getTime() < 7 * DAY).
       </div>
       <div class="dash-stat-divider"></div>
       <div class="dash-stat">
-        <span class="dash-stat-num">{last7d}</span>
-        <span class="dash-stat-label">this week</span>
+        <span class="dash-stat-num">{weekStatNum}</span>
+        <span class="dash-stat-label">{weekStatLabel}</span>
       </div>
     </div>
   </div>

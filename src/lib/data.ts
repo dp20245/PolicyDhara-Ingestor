@@ -24,6 +24,14 @@ export interface PolicyItem {
   state?: string;  // state name if level === 'state'
 }
 
+export interface Amendment {
+  date: string;
+  field: string;
+  old_value: string;
+  new_value: string;
+  source_id: string;
+}
+
 export interface MetaData {
   last_updated: string;
   total_policies: number;
@@ -971,4 +979,38 @@ export function getRecentActiveDates(limit = 7): string[] {
   const policies = getAllPolicies();
   const dates = [...new Set(policies.map(p => p.date))];
   return dates.sort((a, b) => b.localeCompare(a)).slice(0, limit);
+}
+
+/* ── Amendment Tracking ──────────────────────────────────── */
+
+export function getAmendments(): Record<string, Amendment[]> {
+  return readJson<Record<string, Amendment[]>>('amendments.json', {});
+}
+
+export function getAmendmentsForPolicy(id: string): Amendment[] {
+  const all = getAmendments();
+  return all[id] || [];
+}
+
+export function getRecentAmendments(limit = 20): { policy: PolicyItem; amendments: Amendment[] }[] {
+  const all = getAmendments();
+  const policies = getAllPolicies();
+  const policyMap = new Map<string, PolicyItem>();
+  for (const p of policies) policyMap.set(p.id, p);
+
+  // Build entries with the most recent amendment date for sorting
+  const entries: { policy: PolicyItem; amendments: Amendment[]; latestDate: string }[] = [];
+
+  for (const [id, amendments] of Object.entries(all)) {
+    if (amendments.length === 0) continue;
+    const policy = policyMap.get(id);
+    if (!policy) continue;
+    const latestDate = amendments.reduce((max, a) => a.date > max ? a.date : max, '');
+    entries.push({ policy, amendments, latestDate });
+  }
+
+  return entries
+    .sort((a, b) => b.latestDate.localeCompare(a.latestDate))
+    .slice(0, limit)
+    .map(({ policy, amendments }) => ({ policy, amendments }));
 }

@@ -1,0 +1,473 @@
+---
+import Base from '../layouts/Base.astro';
+import NewsletterBar from '../components/NewsletterBar.astro';
+import { getAllPolicies, getMeta, getSectorSlug } from '../lib/data';
+
+const policies = getAllPolicies();
+const meta = getMeta();
+
+const sectors = Object.entries(meta.sector_counts)
+  .sort(([,a], [,b]) => b - a)
+  .map(([name, count]) => ({ name, slug: getSectorSlug(name), count }));
+
+const rawBase = import.meta.env.BASE_URL;
+const base = rawBase.endsWith('/') ? rawBase : rawBase + '/';
+
+// Provide the latest 50 policies as a lightweight JSON index for client-side filtering
+const policyIndex = policies.slice(0, 50).map(p => ({
+  id: p.id,
+  title: p.title,
+  description: p.description?.slice(0, 150) || '',
+  date: p.date,
+  sectors: p.sectors,
+  sector_slugs: p.sector_slugs,
+  source_short: p.source_short,
+  link: p.link,
+  type: p.type,
+}));
+---
+<Base title="Policy Alerts" description="Subscribe to sector-specific policy alerts and watchlists. Get notified when new policies are published in the sectors you care about.">
+  <div class="alerts-page">
+    <header class="alerts-header">
+      <h2 class="page-title">Policy Alerts</h2>
+      <p class="page-subtitle">Watch the sectors you care about. Get filtered policy updates delivered to your inbox.</p>
+    </header>
+
+    <div class="alerts-grid">
+      <!-- Left column: preferences -->
+      <section class="alerts-prefs card">
+        <h3 class="alerts-section-title">Select Sectors to Watch</h3>
+        <p class="alerts-hint">Choose sectors you want to track. Your preferences are saved locally.</p>
+
+        <div class="sector-checkboxes" id="sector-checkboxes">
+          {sectors.map(s => (
+            <label class="sector-check" data-slug={s.slug}>
+              <input type="checkbox" name="sector" value={s.slug} data-sector-name={s.name} />
+              <span class="sector-check-label">
+                <span class="sector-check-name">{s.name}</span>
+                <span class="sector-check-count">{s.count}</span>
+              </span>
+            </label>
+          ))}
+        </div>
+
+        <div class="alerts-actions">
+          <button class="btn-select-all" id="btn-select-all" type="button">Select All</button>
+          <button class="btn-clear-all" id="btn-clear-all" type="button">Clear All</button>
+        </div>
+
+        <div class="keyword-section">
+          <h3 class="alerts-section-title">Keyword Filters</h3>
+          <p class="alerts-hint">Comma-separated keywords to further narrow your alerts.</p>
+          <input type="text" id="keyword-input" class="keyword-input" placeholder="e.g. budget, digital, education, NITI" />
+        </div>
+
+        <button class="btn-save-prefs" id="btn-save-prefs" type="button">Save Preferences</button>
+        <div class="save-status" id="save-status"></div>
+      </section>
+
+      <!-- Right column: preview -->
+      <section class="alerts-preview card">
+        <h3 class="alerts-section-title">Preview: Your Filtered Feed</h3>
+        <p class="alerts-hint" id="preview-hint">Select sectors above to see matching policies.</p>
+
+        <div class="preview-list" id="preview-list">
+          <div class="preview-empty">No sectors selected yet.</div>
+        </div>
+
+        <div class="alerts-newsletter">
+          <h3 class="alerts-section-title">Subscribe for Email Alerts</h3>
+          <p class="alerts-hint">Get daily digests with policies from your watched sectors.</p>
+          <NewsletterBar />
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Client-side policy data for preview -->
+  <script define:vars={{ policyIndex, base }}>
+    window.__alertsPolicies = policyIndex;
+    window.__base = base;
+  </script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const STORAGE_KEY = 'pd-alert-prefs';
+      const policies = (window as any).__alertsPolicies || [];
+      const base = (window as any).__base || '/';
+
+      const checkboxContainer = document.getElementById('sector-checkboxes')!;
+      const keywordInput = document.getElementById('keyword-input') as HTMLInputElement;
+      const previewList = document.getElementById('preview-list')!;
+      const previewHint = document.getElementById('preview-hint')!;
+      const saveBtn = document.getElementById('btn-save-prefs')!;
+      const saveStatus = document.getElementById('save-status')!;
+      const selectAllBtn = document.getElementById('btn-select-all')!;
+      const clearAllBtn = document.getElementById('btn-clear-all')!;
+
+      function getCheckboxes(): HTMLInputElement[] {
+        return Array.from(checkboxContainer.querySelectorAll('input[type="checkbox"]'));
+      }
+
+      function getSelectedSlugs(): string[] {
+        return getCheckboxes().filter(cb => cb.checked).map(cb => cb.value);
+      }
+
+      function getKeywords(): string[] {
+        return keywordInput.value
+          .split(',')
+          .map(k => k.trim().toLowerCase())
+          .filter(k => k.length > 0);
+      }
+
+      function loadPrefs() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return;
+          const prefs = JSON.parse(raw);
+          if (prefs.sectors && Array.isArray(prefs.sectors)) {
+            for (const cb of getCheckboxes()) {
+              cb.checked = prefs.sectors.includes(cb.value);
+            }
+          }
+          if (prefs.keywords) {
+            keywordInput.value = prefs.keywords;
+          }
+        } catch { /* ignore corrupt data */ }
+      }
+
+      function savePrefs() {
+        const prefs = {
+          sectors: getSelectedSlugs(),
+          sectorNames: getCheckboxes().filter(cb => cb.checked).map(cb => cb.dataset.sectorName),
+          keywords: keywordInput.value.trim(),
+          updatedAt: new Date().toISOString(),
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
+        saveStatus.textContent = 'Preferences saved!';
+        saveStatus.className = 'save-status visible';
+        setTimeout(() => { saveStatus.className = 'save-status'; }, 2000);
+      }
+
+      function updatePreview() {
+        const selectedSlugs = getSelectedSlugs();
+        const keywords = getKeywords();
+
+        if (selectedSlugs.length === 0 && keywords.length === 0) {
+          previewList.innerHTML = '<div class="preview-empty">No sectors selected yet.</div>';
+          previewHint.textContent = 'Select sectors above to see matching policies.';
+          return;
+        }
+
+        let filtered = policies;
+
+        if (selectedSlugs.length > 0) {
+          filtered = filtered.filter((p: any) =>
+            p.sector_slugs.some((slug: string) => selectedSlugs.includes(slug))
+          );
+        }
+
+        if (keywords.length > 0) {
+          filtered = filtered.filter((p: any) => {
+            const text = (p.title + ' ' + p.description).toLowerCase();
+            return keywords.some(kw => text.includes(kw));
+          });
+        }
+
+        const top5 = filtered.slice(0, 5);
+        previewHint.textContent = `Showing ${top5.length} of ${filtered.length} matching policies.`;
+
+        if (top5.length === 0) {
+          previewList.innerHTML = '<div class="preview-empty">No policies match your current filters.</div>';
+          return;
+        }
+
+        previewList.innerHTML = top5.map((p: any) => {
+          const sectorTags = p.sectors.map((s: string) =>
+            `<span class="preview-sector">${s}</span>`
+          ).join('');
+          const desc = p.description ? p.description.slice(0, 120) + '...' : '';
+          const linkHref = p.link && p.link.startsWith('http') ? p.link : '#';
+          return `
+            <article class="preview-card">
+              <div class="preview-card-header">
+                <span class="preview-date">${p.date}</span>
+                <span class="preview-source">${p.source_short}</span>
+                <span class="preview-type type-${p.type}">${p.type}</span>
+              </div>
+              <a href="${linkHref}" class="preview-title" target="_blank" rel="noopener">${p.title}</a>
+              <p class="preview-desc">${desc}</p>
+              <div class="preview-sectors">${sectorTags}</div>
+            </article>
+          `;
+        }).join('');
+      }
+
+      // Wire up events
+      checkboxContainer.addEventListener('change', updatePreview);
+      keywordInput.addEventListener('input', updatePreview);
+      saveBtn.addEventListener('click', savePrefs);
+
+      selectAllBtn.addEventListener('click', () => {
+        getCheckboxes().forEach(cb => cb.checked = true);
+        updatePreview();
+      });
+
+      clearAllBtn.addEventListener('click', () => {
+        getCheckboxes().forEach(cb => cb.checked = false);
+        updatePreview();
+      });
+
+      // Load saved prefs and render preview
+      loadPrefs();
+      updatePreview();
+    });
+  </script>
+
+  <style>
+    .alerts-page {
+      padding: var(--space-xl) 0;
+    }
+    .alerts-header {
+      margin-bottom: var(--space-lg);
+    }
+    .alerts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-lg);
+      align-items: start;
+    }
+    @media (max-width: 768px) {
+      .alerts-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .card {
+      background: var(--color-bg-white);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-lg);
+      box-shadow: var(--shadow-card);
+    }
+    .alerts-section-title {
+      font-family: 'Newsreader', serif;
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin: 0 0 0.25rem 0;
+      color: var(--color-text);
+    }
+    .alerts-hint {
+      color: var(--color-text-muted);
+      font-size: 0.85rem;
+      margin: 0 0 var(--space-md) 0;
+    }
+
+    /* Sector checkboxes */
+    .sector-checkboxes {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.35rem;
+      max-height: 420px;
+      overflow-y: auto;
+      margin-bottom: var(--space-md);
+      padding-right: 0.25rem;
+    }
+    @media (max-width: 480px) {
+      .sector-checkboxes {
+        grid-template-columns: 1fr;
+      }
+    }
+    .sector-check {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.5rem;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: background 0.15s;
+      font-size: 0.85rem;
+    }
+    .sector-check:hover {
+      background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+    }
+    .sector-check input[type="checkbox"] {
+      accent-color: var(--color-accent);
+      width: 15px;
+      height: 15px;
+      flex-shrink: 0;
+    }
+    .sector-check-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex: 1;
+      min-width: 0;
+    }
+    .sector-check-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--color-text);
+    }
+    .sector-check-count {
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+      background: color-mix(in srgb, var(--color-border) 50%, transparent);
+      padding: 0.1rem 0.4rem;
+      border-radius: 999px;
+      flex-shrink: 0;
+      margin-left: 0.25rem;
+    }
+
+    /* Actions */
+    .alerts-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: var(--space-lg);
+    }
+    .btn-select-all, .btn-clear-all {
+      padding: 0.35rem 0.75rem;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-bg-white);
+      color: var(--color-text-secondary);
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-select-all:hover, .btn-clear-all:hover {
+      border-color: var(--color-accent);
+      color: var(--color-accent);
+    }
+
+    /* Keywords */
+    .keyword-section {
+      border-top: 1px solid var(--color-border);
+      padding-top: var(--space-md);
+      margin-bottom: var(--space-lg);
+    }
+    .keyword-input {
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-bg-white);
+      color: var(--color-text);
+      font-size: 0.9rem;
+      box-sizing: border-box;
+    }
+    .keyword-input:focus {
+      outline: none;
+      border-color: var(--color-accent);
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 20%, transparent);
+    }
+
+    /* Save button */
+    .btn-save-prefs {
+      display: block;
+      width: 100%;
+      padding: 0.6rem;
+      background: var(--color-accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn-save-prefs:hover {
+      opacity: 0.9;
+    }
+    .save-status {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #16a34a;
+      margin-top: 0.4rem;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .save-status.visible {
+      opacity: 1;
+    }
+
+    /* Preview cards */
+    .preview-empty {
+      text-align: center;
+      color: var(--color-text-muted);
+      padding: var(--space-lg) 0;
+      font-size: 0.9rem;
+    }
+    .preview-card {
+      border-bottom: 1px solid var(--color-border);
+      padding: var(--space-md) 0;
+    }
+    .preview-card:last-child {
+      border-bottom: none;
+    }
+    .preview-card-header {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      margin-bottom: 0.25rem;
+      flex-wrap: wrap;
+    }
+    .preview-date {
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+    }
+    .preview-source {
+      font-size: 0.75rem;
+      color: var(--color-text-secondary);
+      font-weight: 500;
+    }
+    .preview-type {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.1rem 0.4rem;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+      color: var(--color-accent);
+      font-weight: 600;
+    }
+    .preview-title {
+      display: block;
+      font-family: 'Newsreader', serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--color-text);
+      text-decoration: none;
+      line-height: 1.35;
+      margin-bottom: 0.2rem;
+    }
+    .preview-title:hover {
+      color: var(--color-accent);
+    }
+    .preview-desc {
+      font-size: 0.8rem;
+      color: var(--color-text-muted);
+      margin: 0 0 0.3rem 0;
+      line-height: 1.4;
+    }
+    .preview-sectors {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+    }
+    .preview-sector {
+      font-size: 0.65rem;
+      padding: 0.1rem 0.35rem;
+      border-radius: var(--radius-md);
+      background: color-mix(in srgb, var(--color-border) 60%, transparent);
+      color: var(--color-text-secondary);
+    }
+
+    /* Newsletter section within preview */
+    .alerts-newsletter {
+      border-top: 1px solid var(--color-border);
+      padding-top: var(--space-lg);
+      margin-top: var(--space-lg);
+    }
+  </style>
+</Base>
