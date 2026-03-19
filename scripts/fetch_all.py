@@ -376,7 +376,16 @@ def merge_policies(existing: dict, new_items: list[dict]) -> list[dict]:
         print(f"  Amendment tracking: {amended_count} policies with recorded changes")
 
     for item in new_items:
-        existing[item["id"]] = item
+        pid = item["id"]
+        if pid in existing:
+            old = existing[pid]
+            # Preserve the earlier (better) date if the new item has today's date
+            # or a later date — original publication dates are more accurate
+            old_date = old.get("date", "")
+            new_date = item.get("date", "")
+            if old_date and old_date < new_date:
+                item["date"] = old_date
+        existing[pid] = item
 
     # First pass: deduplicate by source+title (keep the one with the best date)
     seen: dict[tuple, dict] = {}
@@ -408,13 +417,18 @@ def merge_policies(existing: dict, new_items: list[dict]) -> list[dict]:
         else:
             by_title[title] = item
 
-    # Sort by date (newest first) and cap total
-    all_items = sorted(
-        by_title.values(),
-        key=lambda x: x.get("date", "1970-01-01"),
-        reverse=True
-    )
-    return all_items[:MAX_TOTAL_ITEMS]
+    # Separate historical seed items (source_id == "historical") to ensure they survive the cap
+    seed_items = [i for i in by_title.values() if i.get("source_id") == "historical"]
+    live_items = [i for i in by_title.values() if i.get("source_id") != "historical"]
+
+    # Sort live items by date (newest first) and cap
+    live_items.sort(key=lambda x: x.get("date", "1970-01-01"), reverse=True)
+    live_items = live_items[:MAX_TOTAL_ITEMS - len(seed_items)]
+
+    # Combine and sort all by date
+    all_items = live_items + seed_items
+    all_items.sort(key=lambda x: x.get("date", "1970-01-01"), reverse=True)
+    return all_items
 
 
 def write_astro_content(policies: list[dict]):

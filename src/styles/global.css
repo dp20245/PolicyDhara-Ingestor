@@ -465,6 +465,7 @@ a:hover { color: var(--color-accent-hover); }
 .policy-card-header {
   margin-bottom: 8px;
   flex: 1;
+  padding-right: 28px;
 }
 
 .policy-title {

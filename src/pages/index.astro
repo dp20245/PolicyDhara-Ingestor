@@ -21,6 +21,11 @@ const now = Date.now();
 const DAY = 86400000;
 const last24h = policies.filter(p => now - new Date(p.date).getTime() < DAY).length;
 const last7d = policies.filter(p => now - new Date(p.date).getTime() < 7 * DAY).length;
+
+// For "this week" display: if nearly all policies are within 7 days,
+// the data lacks historical dates — show last 24h count instead
+const weekStatLabel = last7d > meta.total_policies * 0.8 ? 'today' : 'this week';
+const weekStatNum = last7d > meta.total_policies * 0.8 ? last24h : last7d;
 ---
 <Base title="Dashboard">
 
@@ -48,8 +53,8 @@ const last7d = policies.filter(p => now - new Date(p.date).getTime() < 7 * DAY).
       </div>
       <div class="dash-stat-divider"></div>
       <div class="dash-stat">
-        <span class="dash-stat-num">{last7d}</span>
-        <span class="dash-stat-label">this week</span>
+        <span class="dash-stat-num">{weekStatNum}</span>
+        <span class="dash-stat-label">{weekStatLabel}</span>
       </div>
     </div>
   </div>
