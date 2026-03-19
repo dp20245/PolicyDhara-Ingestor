@@ -1,0 +1,36 @@
+import rss from '@astrojs/rss';
+import type { APIContext, GetStaticPaths } from 'astro';
+import { getAllPolicies, getMeta, getSectorSlug } from '../../lib/data';
+
+export const getStaticPaths: GetStaticPaths = () => {
+  const meta = getMeta();
+  const sectors = Object.keys(meta.sector_counts);
+
+  return sectors.map(sector => ({
+    params: { sector: getSectorSlug(sector) },
+    props: { sectorName: sector },
+  }));
+};
+
+export function GET(context: APIContext & { props: { sectorName: string } }) {
+  const { sectorName } = context.props;
+  const sectorSlug = getSectorSlug(sectorName);
+  const policies = getAllPolicies()
+    .filter(p => p.sector_slugs.includes(sectorSlug))
+    .slice(0, 100);
+
+  return rss({
+    title: `PolicyDhara - ${sectorName}`,
+    description: `Indian development policies in the ${sectorName} sector — by ImpactMojo`,
+    site: context.site?.toString() || 'https://varnasr.github.io/PolicyDhara',
+    items: policies.map(p => ({
+      title: p.title,
+      description: `[${p.sectors.join(', ')}] ${p.description}`,
+      link: p.link || `https://varnasr.github.io/PolicyDhara/`,
+      pubDate: new Date(p.date),
+      categories: p.sectors,
+      customData: `<source>${p.source_short}</source><type>${p.type}</type>`,
+    })),
+    customData: `<language>en-in</language>`,
+  });
+}
