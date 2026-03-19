@@ -389,8 +389,113 @@ def scrape_data_gov_api(config: dict) -> list[dict]:
         return []
 
 
+def discover_rss_url(soup: BeautifulSoup, base_url: str) -> str | None:
+    """Look for RSS/Atom auto-discovery links in the HTML <head>.
+
+    Returns the absolute RSS URL if found, None otherwise.
+    """
+    for link_tag in soup.select('link[rel="alternate"]'):
+        link_type = (link_tag.get("type") or "").lower()
+        if link_type in ("application/rss+xml", "application/atom+xml"):
+            href = (link_tag.get("href") or "").strip()
+            if href:
+                if not href.startswith("http"):
+                    parsed = urlparse(base_url)
+                    if href.startswith("/"):
+                        href = f"{parsed.scheme}://{parsed.netloc}{href}"
+                    else:
+                        href = f"{parsed.scheme}://{parsed.netloc}/{href}"
+                return href
+    return None
+
+
+# CSS selectors covering a wide range of site structures
+_MINISTRY_ROW_SELECTORS = ", ".join([
+    # Drupal-based government sites
+    ".views-row", "article", ".list-item", "table tbody tr",
+    ".news-item", ".card", ".panel",
+    # News sites
+    ".story-card", ".article-list li", ".post-item", ".news-list li",
+    ".story__card", ".article_content", ".entry",
+    ".listing-page .story", "[data-story]", ".story-element",
+    # Think tanks / research organisations
+    ".publication-item", ".research-item", ".paper-item",
+    ".blog-post", ".insight-item", ".report-item",
+    # WordPress sites
+    ".post", ".entry-title a", ".wp-block-post", ".hentry",
+    # Government portals & scheme pages
+    ".scheme-card", ".notification-item", ".press-release",
+    ".circular-item", ".order-item",
+    # Generic / fallback
+    "main article", "section article", ".content-list li",
+    ".results li", "#content .item",
+])
+
+# Title selectors tried in order; first match wins
+_TITLE_SELECTORS = [
+    "h1 a", "h2 a", "h3 a", "h4 a",
+    ".title a", ".headline a",
+    "a h2", "a h3",
+]
+
+
+def _extract_title_and_link(row, base_url: str) -> tuple[str, str]:
+    """Extract the best (title, link) pair from a content row element."""
+    parsed_base = urlparse(base_url)
+
+    def _abs(href: str) -> str:
+        if not href:
+            return ""
+        if href.startswith("http"):
+            return href
+        if href.startswith("/"):
+            return f"{parsed_base.scheme}://{parsed_base.netloc}{href}"
+        return f"{parsed_base.scheme}://{parsed_base.netloc}/{href}"
+
+    # Try dedicated title selectors first
+    for sel in _TITLE_SELECTORS:
+        el = row.select_one(sel)
+        if el:
+            text = el.get_text(strip=True)
+            if text and len(text) > 3:
+                # The element itself or its nearest <a> ancestor/descendant
+                if el.name == "a":
+                    return text, _abs(el.get("href", ""))
+                parent_a = el.find_parent("a")
+                if parent_a:
+                    return text, _abs(parent_a.get("href", ""))
+                child_a = el.select_one("a")
+                if child_a:
+                    return text, _abs(child_a.get("href", ""))
+                return text, ""
+
+    # Fallback: first significant <a> tag in the row
+    for a in row.select("a"):
+        href = a.get("href", "")
+        text = a.get_text(strip=True)
+        # Skip tiny / navigation-only anchors
+        if text and len(text) > 5 and not href.startswith("#") and not href.startswith("javascript"):
+            return text, _abs(href)
+
+    # Last resort: any heading text
+    for tag in ("h2", "h3", "h4", "h1", ".title", ".headline"):
+        el = row.select_one(tag)
+        if el:
+            text = el.get_text(strip=True)
+            if text and len(text) > 3:
+                child_a = el.select_one("a") or row.select_one("a")
+                link = _abs(child_a.get("href", "")) if child_a else ""
+                return text, link
+
+    return "", ""
+
+
 def scrape_ministry(config: dict) -> list[dict]:
-    """Generic ministry website scraper."""
+    """Generic ministry website scraper.
+
+    Covers Drupal, WordPress, news sites, think-tank portals,
+    government scheme pages, and generic HTML list layouts.
+    """
     url = config.get("url", "")
     if not url:
         return []
@@ -401,38 +506,50 @@ def scrape_ministry(config: dict) -> list[dict]:
 
     soup = BeautifulSoup(resp.text, "lxml")
     items = []
+    seen_links: set[str] = set()
 
-    for row in soup.select(".views-row, article, .list-item, table tbody tr, .news-item, .card, .panel"):
-        title_el = row.select_one("a, h2, h3, h4, .title")
-        if not title_el:
+    for row in soup.select(_MINISTRY_ROW_SELECTORS):
+        title, link = _extract_title_and_link(row, url)
+        if not title or len(title) <= 5:
             continue
 
-        title = title_el.get_text(strip=True)
-        link = ""
-        if title_el.name == "a":
-            link = title_el.get("href", "")
-        else:
-            a = row.select_one("a")
-            if a:
-                link = a.get("href", "")
+        # Deduplicate by link
+        if link and link in seen_links:
+            continue
+        if link:
+            seen_links.add(link)
 
-        if link and not link.startswith("http"):
-            parsed = urlparse(url)
-            link = f"{parsed.scheme}://{parsed.netloc}{link}"
+        # Date extraction — try several common selectors
+        date = ""
+        for date_sel in (".date", "time", ".created", ".field-date",
+                         ".datetime", ".published-date", ".meta-date",
+                         ".post-date", ".entry-date", "[datetime]",
+                         ".timestamp", ".article-date"):
+            date_el = row.select_one(date_sel)
+            if date_el:
+                date = parse_date_text(
+                    date_el.get("datetime", "") or date_el.get_text(strip=True)
+                )
+                if date:
+                    break
 
-        date_el = row.select_one(".date, time, .created, .field-date")
-        date = parse_date_text(date_el.get_text(strip=True) if date_el else "")
+        # Description extraction
+        desc = ""
+        for desc_sel in (".summary", ".teaser", "p", ".description",
+                         ".excerpt", ".abstract", ".field-body",
+                         ".post-excerpt", ".entry-summary"):
+            desc_el = row.select_one(desc_sel)
+            if desc_el:
+                desc = desc_el.get_text(strip=True)
+                if desc:
+                    break
 
-        desc_el = row.select_one(".summary, .teaser, p, .description")
-        desc = desc_el.get_text(strip=True) if desc_el else ""
-
-        if title and len(title) > 5:
-            items.append({
-                "title": title[:200],
-                "description": desc[:500],
-                "link": link,
-                "date": date,
-            })
+        items.append({
+            "title": title[:200],
+            "description": desc[:500],
+            "link": link,
+            "date": date,
+        })
 
     return items
 
@@ -839,6 +956,39 @@ SOURCE_SCRAPERS = {
 
 
 def fetch_scrape_source(source_id: str, config: dict) -> list[dict]:
-    """Route to the appropriate scraper for a source."""
+    """Route to the appropriate scraper for a source.
+
+    If the scraper returns zero results, attempt RSS auto-discovery on the
+    same page and parse the feed as a fallback.
+    """
     scraper = SOURCE_SCRAPERS.get(source_id, scrape_ministry)
-    return scraper(config)
+    results = scraper(config)
+
+    if results:
+        return results
+
+    # ── RSS auto-discovery fallback ──────────────────────────────────
+    url = config.get("url", "")
+    if not url:
+        return []
+
+    resp = safe_get(url)
+    if not resp:
+        return []
+
+    soup = BeautifulSoup(resp.text, "lxml")
+    rss_url = discover_rss_url(soup, url)
+    if not rss_url:
+        return []
+
+    print(f"  Discovered RSS feed for {source_id}: {rss_url}")
+    rss_resp = safe_get(rss_url)
+    if not rss_resp:
+        return []
+
+    try:
+        from fetch_rss import parse_rss_xml
+    except ImportError:
+        from scripts.fetch_rss import parse_rss_xml
+
+    return parse_rss_xml(rss_resp.content)

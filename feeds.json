@@ -1,7 +1,7 @@
 {
   "metadata": {
     "name": "PolicyDhara",
-    "description": "Open-source tracker of Indian development policies across 20+ sectors — by ImpactMojo",
+    "description": "Open-source tracker of Indian development policies across 23 sectors — by ImpactMojo",
     "version": "2.0.0",
     "update_frequency": "Every 6 hours via GitHub Actions"
   },
@@ -27,7 +27,8 @@
     "Science & Innovation",
     "Tribal & Indigenous",
     "Disability & Inclusion",
-    "Child Rights & Youth"
+    "Child Rights & Youth",
+    "Civil Liberties"
   ],
   "sources": {
     "pib": {
@@ -105,7 +106,8 @@
       "reliability": "high",
       "description": "Policy papers, reports, and research from India's apex policy think tank",
       "covers_sectors": "all",
-      "url": "https://www.niti.gov.in/documents/reports"
+      "url": "https://www.niti.gov.in/documents/reports",
+      "rss_url": "https://www.niti.gov.in/rss.xml"
     },
     "parliament_lok_sabha": {
       "name": "Lok Sabha - Digital Sansad",
@@ -164,7 +166,8 @@
       "description": "Monetary policy, banking regulations, financial circulars, press releases",
       "covers_sectors": [
         "Finance & Economy"
-      ]
+      ],
+      "rss_url": "https://www.rbi.org.in/Scripts/BS_PressReleaseDisplay.aspx"
     },
     "moefcc": {
       "name": "Ministry of Environment, Forest and Climate Change",
@@ -201,7 +204,8 @@
       "format": "HTML",
       "reliability": "high",
       "description": "Policy research and analysis from one of India's leading think tanks",
-      "covers_sectors": "all"
+      "covers_sectors": "all",
+      "rss_url": "https://www.orfonline.org/feed"
     },
     "cprindia": {
       "name": "Centre for Policy Research",
@@ -212,7 +216,8 @@
       "format": "RSS/XML",
       "reliability": "high",
       "description": "Policy research on urbanisation, environment, law, governance",
-      "covers_sectors": "all"
+      "covers_sectors": "all",
+      "rss_url": "https://cprindia.org/feed/"
     },
     "livemint_policy": {
       "name": "Livemint - Policy & Politics",
@@ -223,7 +228,8 @@
       "format": "RSS/XML",
       "reliability": "high",
       "description": "Policy and politics news coverage from Livemint — budget, governance, legislation",
-      "covers_sectors": "all"
+      "covers_sectors": "all",
+      "rss_url": "https://www.livemint.com/rss/politics"
     },
     "state_pib_maharashtra": {
       "name": "PIB Mumbai (Maharashtra)",
@@ -236,7 +242,8 @@
       "description": "PIB press releases from Mumbai regional office covering Maharashtra",
       "covers_sectors": "all",
       "level": "state",
-      "state": "Maharashtra"
+      "state": "Maharashtra",
+      "rss_url": "https://www.pib.gov.in/RssMain.aspx?ModId=6&Lang=1&Regid=14"
     },
     "state_pib_tamil_nadu": {
       "name": "PIB Chennai (Tamil Nadu)",
@@ -249,7 +256,8 @@
       "description": "PIB press releases from Chennai regional office covering Tamil Nadu",
       "covers_sectors": "all",
       "level": "state",
-      "state": "Tamil Nadu"
+      "state": "Tamil Nadu",
+      "rss_url": "https://www.pib.gov.in/RssMain.aspx?ModId=6&Lang=1&Regid=13"
     },
     "state_pib_karnataka": {
       "name": "PIB Bengaluru (Karnataka)",
@@ -275,7 +283,8 @@
       "description": "PIB press releases from Kolkata regional office covering West Bengal and Eastern India",
       "covers_sectors": "all",
       "level": "state",
-      "state": "West Bengal"
+      "state": "West Bengal",
+      "rss_url": "https://www.pib.gov.in/RssMain.aspx?ModId=6&Lang=1&Regid=4"
     },
     "state_pib_uttar_pradesh": {
       "name": "PIB Lucknow (Uttar Pradesh)",
@@ -288,7 +297,8 @@
       "description": "PIB press releases from Lucknow regional office covering Uttar Pradesh",
       "covers_sectors": "all",
       "level": "state",
-      "state": "Uttar Pradesh"
+      "state": "Uttar Pradesh",
+      "rss_url": "https://www.pib.gov.in/RssMain.aspx?ModId=6&Lang=1&Regid=8"
     },
     "state_pib_gujarat": {
       "name": "PIB Ahmedabad (Gujarat)",
@@ -301,7 +311,8 @@
       "description": "PIB press releases from Ahmedabad regional office covering Gujarat",
       "covers_sectors": "all",
       "level": "state",
-      "state": "Gujarat"
+      "state": "Gujarat",
+      "rss_url": "https://www.pib.gov.in/RssMain.aspx?ModId=6&Lang=1&Regid=7"
     },
     "state_pib_kerala": {
       "name": "PIB Thiruvananthapuram (Kerala)",
@@ -314,7 +325,8 @@
       "description": "PIB press releases from Thiruvananthapuram regional office covering Kerala",
       "covers_sectors": "all",
       "level": "state",
-      "state": "Kerala"
+      "state": "Kerala",
+      "rss_url": "https://www.pib.gov.in/RssMain.aspx?ModId=6&Lang=1&Regid=10"
     },
     "state_pib_madhya_pradesh": {
       "name": "PIB Bhopal (Madhya Pradesh)",
@@ -327,7 +339,8 @@
       "description": "PIB press releases from Bhopal regional office covering Madhya Pradesh and Chhattisgarh",
       "covers_sectors": "all",
       "level": "state",
-      "state": "Madhya Pradesh"
+      "state": "Madhya Pradesh",
+      "rss_url": "https://www.pib.gov.in/RssMain.aspx?ModId=6&Lang=1&Regid=9"
     },
     "state_pib_rajasthan": {
       "name": "PIB Jaipur (Rajasthan)",
@@ -340,7 +353,8 @@
       "description": "PIB press releases from Jaipur regional office covering Rajasthan",
       "covers_sectors": "all",
       "level": "state",
-      "state": "Rajasthan"
+      "state": "Rajasthan",
+      "rss_url": "https://www.pib.gov.in/RssMain.aspx?ModId=6&Lang=1&Regid=11"
     },
     "state_pib_telangana": {
       "name": "PIB Hyderabad (Telangana & AP)",
@@ -353,7 +367,8 @@
       "description": "PIB press releases from Hyderabad regional office covering Telangana and Andhra Pradesh",
       "covers_sectors": "all",
       "level": "state",
-      "state": "Telangana"
+      "state": "Telangana",
+      "rss_url": "https://www.pib.gov.in/RssMain.aspx?ModId=6&Lang=1&Regid=12"
     },
     "state_pib_punjab": {
       "name": "PIB Chandigarh (Punjab & Haryana)",
@@ -392,7 +407,8 @@
       "description": "PIB press releases from Patna regional office covering Bihar and Jharkhand",
       "covers_sectors": "all",
       "level": "state",
-      "state": "Bihar"
+      "state": "Bihar",
+      "rss_url": "https://www.pib.gov.in/RssMain.aspx?ModId=6&Lang=1&Regid=5"
     },
     "the_hindu_policy": {
       "name": "The Hindu - National",
@@ -403,7 +419,8 @@
       "format": "RSS",
       "reliability": "high",
       "description": "National news and policy coverage from The Hindu",
-      "covers_sectors": "all"
+      "covers_sectors": "all",
+      "rss_url": "https://www.thehindu.com/news/national/feeder/default.rss"
     },
     "the_hindu_business": {
       "name": "The Hindu - Business",
@@ -417,7 +434,8 @@
       "covers_sectors": [
         "Finance & Economy",
         "Trade & Commerce"
-      ]
+      ],
+      "rss_url": "https://www.thehindu.com/business/feeder/default.rss"
     },
     "indian_express_policy": {
       "name": "Indian Express - India",
@@ -428,7 +446,8 @@
       "format": "RSS",
       "reliability": "high",
       "description": "National policy news from The Indian Express",
-      "covers_sectors": "all"
+      "covers_sectors": "all",
+      "rss_url": "https://indianexpress.com/section/india/feed/"
     },
     "indian_express_business": {
       "name": "Indian Express - Business",
@@ -442,7 +461,8 @@
       "covers_sectors": [
         "Finance & Economy",
         "Trade & Commerce"
-      ]
+      ],
+      "rss_url": "https://indianexpress.com/section/business/feed/"
     },
     "ndtv_india": {
       "name": "NDTV - India",
@@ -453,7 +473,8 @@
       "format": "RSS",
       "reliability": "high",
       "description": "India policy and politics coverage from NDTV",
-      "covers_sectors": "all"
+      "covers_sectors": "all",
+      "rss_url": "https://feeds.feedburner.com/ndtvnews-india-news"
     },
     "the_wire": {
       "name": "The Wire",
@@ -475,7 +496,8 @@
       "format": "RSS",
       "reliability": "high",
       "description": "India news and policy coverage from Hindustan Times",
-      "covers_sectors": "all"
+      "covers_sectors": "all",
+      "rss_url": "https://www.hindustantimes.com/feeds/rss/india-news/rssfeed.xml"
     },
     "business_line": {
       "name": "BusinessLine - Economy",
@@ -488,7 +510,8 @@
       "description": "Economic policy from The Hindu BusinessLine",
       "covers_sectors": [
         "Finance & Economy"
-      ]
+      ],
+      "rss_url": "https://www.thehindubusinessline.com/economy/feeder/default.rss"
     },
     "firstpost_india": {
       "name": "Firstpost - India",
@@ -510,7 +533,8 @@
       "format": "RSS",
       "reliability": "medium",
       "description": "India news and policy from News18",
-      "covers_sectors": "all"
+      "covers_sectors": "all",
+      "rss_url": "https://www.news18.com/commonfeeds/v1/eng/rss/india.xml"
     },
     "the_print": {
       "name": "ThePrint",
@@ -532,7 +556,8 @@
       "format": "RSS",
       "reliability": "high",
       "description": "Policy opinion and analysis from Livemint",
-      "covers_sectors": "all"
+      "covers_sectors": "all",
+      "rss_url": "https://www.livemint.com/rss/opinion"
     },
     "icrier": {
       "name": "ICRIER",
@@ -546,7 +571,8 @@
       "covers_sectors": [
         "Finance & Economy",
         "Trade & Commerce"
-      ]
+      ],
+      "rss_url": "https://icrier.org/feed/"
     },
     "brookings_india": {
       "name": "Brookings India",
@@ -557,7 +583,8 @@
       "format": "RSS",
       "reliability": "high",
       "description": "Brookings Institution India research — governance, economy, foreign policy",
-      "covers_sectors": "all"
+      "covers_sectors": "all",
+      "rss_url": "https://www.brookings.edu/topic/india/feed/"
     },
     "carnegie_india": {
       "name": "Carnegie India",
@@ -572,7 +599,8 @@
         "Governance & Reform",
         "Defence & Security",
         "Digital & Technology"
-      ]
+      ],
+      "rss_url": "https://carnegieindia.org/feed"
     },
     "cppr": {
       "name": "Centre for Public Policy Research",
@@ -656,7 +684,8 @@
       "description": "Securities market regulations, circulars, and press releases",
       "covers_sectors": [
         "Finance & Economy"
-      ]
+      ],
+      "rss_url": "https://www.sebi.gov.in/sebiweb/other/RSSFeed.jsp"
     },
     "trai": {
       "name": "Telecom Regulatory Authority of India",
@@ -669,7 +698,8 @@
       "description": "Telecom regulation, tariff orders, spectrum policy, net neutrality",
       "covers_sectors": [
         "Digital & Technology"
-      ]
+      ],
+      "rss_url": "https://www.trai.gov.in/rss.xml"
     },
     "irdai": {
       "name": "Insurance Regulatory and Development Authority of India",
@@ -700,16 +730,19 @@
     "fssai": {
       "name": "Food Safety and Standards Authority of India",
       "short_name": "FSSAI",
-      "type": "scrape",
-      "url": "https://www.fssai.gov.in/cms/latest-news.php",
+      "type": "rss",
+      "url": "https://www.fssai.gov.in/rss/orders-and-regulations.xml",
+      "backup_urls": [
+        "https://www.fssai.gov.in/cms/orders-and-regulations.php"
+      ],
       "frequency": "Weekly",
-      "format": "HTML",
+      "format": "RSS",
       "reliability": "high",
-      "description": "Food safety regulations, licensing, and standards",
       "covers_sectors": [
         "Health",
         "Agriculture"
-      ]
+      ],
+      "rss_url": "https://www.fssai.gov.in/rss/orders-and-regulations.xml"
     },
     "cbic": {
       "name": "Central Board of Indirect Taxes and Customs",
@@ -728,14 +761,17 @@
     "dpiit": {
       "name": "Department for Promotion of Industry and Internal Trade",
       "short_name": "DPIIT",
-      "type": "scrape",
-      "url": "https://dpiit.gov.in/policies-rules-and-acts/press-notes",
-      "frequency": "Monthly",
-      "format": "HTML",
+      "type": "rss",
+      "url": "https://dpiit.gov.in/rss.xml",
+      "backup_urls": [
+        "https://dpiit.gov.in/policies-rules-and-acts"
+      ],
+      "frequency": "Weekly",
+      "format": "RSS + HTML",
       "reliability": "high",
-      "description": "FDI policy, industrial policy, startup India, ease of doing business",
       "covers_sectors": [
         "Trade & Commerce",
+        "Digital & Technology",
         "Finance & Economy"
       ]
     },
@@ -750,7 +786,8 @@
       "description": "Health policy, disease surveillance, healthcare infrastructure",
       "covers_sectors": [
         "Health"
-      ]
+      ],
+      "rss_url": "https://mohfw.gov.in/rss-feed"
     },
     "moe": {
       "name": "Ministry of Education",
@@ -763,7 +800,8 @@
       "description": "Education policy — NEP implementation, UGC, AICTE, school education",
       "covers_sectors": [
         "Education"
-      ]
+      ],
+      "rss_url": "https://www.education.gov.in/rss-feed"
     },
     "mord": {
       "name": "Ministry of Rural Development",
@@ -849,7 +887,10 @@
       "name": "Ministry of External Affairs",
       "short_name": "MEA",
       "type": "rss",
-      "url": "https://www.mea.gov.in/rss.htm",
+      "url": "https://www.mea.gov.in/press-releases.htm?dtl/rss",
+      "backup_urls": [
+        "https://www.mea.gov.in/rss.htm"
+      ],
       "frequency": "Daily",
       "format": "RSS",
       "reliability": "high",
@@ -875,13 +916,16 @@
     "mospi": {
       "name": "Ministry of Statistics and Programme Implementation",
       "short_name": "MoSPI",
-      "type": "scrape",
-      "url": "https://www.mospi.gov.in/publication/press-releases",
+      "type": "rss",
+      "url": "https://www.mospi.gov.in/web/mospi/rss-feeds",
+      "backup_urls": [
+        "https://www.mospi.gov.in/publication/statistical-year-book-india"
+      ],
       "frequency": "Monthly",
-      "format": "HTML",
+      "format": "RSS + HTML",
       "reliability": "high",
-      "description": "Economic statistics — GDP, CPI, IIP, employment surveys",
       "covers_sectors": [
+        "Governance & Reform",
         "Finance & Economy"
       ]
     },
@@ -935,7 +979,8 @@
       "description": "Legal journalism — Supreme Court, High Courts, tribunals, law firms",
       "covers_sectors": [
         "Governance & Reform"
-      ]
+      ],
+      "rss_url": "https://www.barandbench.com/feed"
     },
     "scobserver": {
       "name": "Supreme Court Observer",
@@ -948,7 +993,8 @@
       "description": "In-depth analysis of Supreme Court cases and constitutional law",
       "covers_sectors": [
         "Governance & Reform"
-      ]
+      ],
+      "rss_url": "https://www.scobserver.in/feed/"
     },
     "nlsiu_blog": {
       "name": "NLSIU Blog",
@@ -961,7 +1007,8 @@
       "description": "National Law School research — legal policy, constitutional law, IP",
       "covers_sectors": [
         "Governance & Reform"
-      ]
+      ],
+      "rss_url": "https://www.nls.ac.in/feed/"
     },
     "nha": {
       "name": "National Health Authority",
@@ -988,7 +1035,8 @@
       "covers_sectors": [
         "Digital & Technology",
         "Trade & Commerce"
-      ]
+      ],
+      "rss_url": "https://nasscom.in/rss.xml"
     },
     "cii": {
       "name": "Confederation of Indian Industry",
@@ -1326,14 +1374,13 @@
       ]
     },
     "npci": {
-      "name": "NPCI",
+      "name": "National Payments Corporation of India",
       "short_name": "NPCI",
       "type": "scrape",
-      "url": "https://www.npci.org.in/",
+      "url": "https://www.npci.org.in/what-we-do/upi/circular-and-advisory",
       "frequency": "Monthly",
       "format": "HTML",
       "reliability": "high",
-      "description": "Digital payments, UPI policy, RuPay, NACH",
       "covers_sectors": [
         "Digital & Technology",
         "Finance & Economy"
@@ -1689,7 +1736,8 @@
       "covers_sectors": [
         "Health",
         "Science & Innovation"
-      ]
+      ],
+      "rss_url": "https://main.icmr.nic.in/rss-feed"
     },
     "icar": {
       "name": "ICAR",
@@ -1703,13 +1751,14 @@
       "covers_sectors": [
         "Agriculture",
         "Science & Innovation"
-      ]
+      ],
+      "rss_url": "https://icar.org.in/rss.xml"
     },
     "drishti_ias": {
       "name": "Drishti IAS",
       "short_name": "Drishti",
       "type": "rss",
-      "url": "https://www.drishtiias.com/",
+      "url": "https://www.drishtiias.com/current-affairs-news-analysis-editorials/rss",
       "rss_url": "https://www.drishtiias.com/rss/current-affairs-news-analysis-editorials",
       "frequency": "Daily",
       "format": "RSS",
@@ -1721,7 +1770,7 @@
       "name": "Insights IAS",
       "short_name": "InsightsIAS",
       "type": "rss",
-      "url": "https://www.insightsonindia.com/",
+      "url": "https://www.insightsonindia.com/feed/",
       "frequency": "Daily",
       "format": "HTML",
       "reliability": "medium",
@@ -1781,7 +1830,8 @@
       "description": "Pollution monitoring, climate policy, waste management",
       "covers_sectors": [
         "Climate & Environment"
-      ]
+      ],
+      "rss_url": "https://www.cseindia.org/feed"
     },
     "wipro_sustainability": {
       "name": "Wipro Foundation",
@@ -1809,7 +1859,8 @@
       "covers_sectors": [
         "Education",
         "Labour & Employment"
-      ]
+      ],
+      "rss_url": "https://azimpremjiuniversity.edu.in/feed"
     },
     "oecd_india": {
       "name": "OECD India",
@@ -1881,7 +1932,7 @@
       "name": "Al Jazeera South Asia",
       "short_name": "AlJazeera",
       "type": "rss",
-      "url": "https://www.aljazeera.com/where/india/",
+      "url": "https://www.aljazeera.com/where/india/rss.xml",
       "frequency": "Daily",
       "format": "RSS",
       "reliability": "medium",
@@ -1892,12 +1943,13 @@
       "name": "Outlook India",
       "short_name": "Outlook",
       "type": "rss",
-      "url": "https://www.outlookindia.com/",
+      "url": "https://www.outlookindia.com/feed",
       "frequency": "Daily",
       "format": "RSS",
       "reliability": "medium",
       "description": "Indian newsmagazine covering policy, politics, society",
-      "covers_sectors": "all"
+      "covers_sectors": "all",
+      "rss_url": "https://www.outlookindia.com/rss"
     },
     "frontline_mag": {
       "name": "Frontline Magazine",
@@ -1908,13 +1960,14 @@
       "format": "HTML",
       "reliability": "high",
       "description": "In-depth policy journalism from The Hindu group",
-      "covers_sectors": "all"
+      "covers_sectors": "all",
+      "rss_url": "https://frontline.thehindu.com/feeder/default.rss"
     },
     "deccan_chronicle": {
       "name": "Deccan Chronicle",
       "short_name": "DC",
       "type": "rss",
-      "url": "https://www.deccanchronicle.com/",
+      "url": "https://www.deccanchronicle.com/rss_feed/",
       "frequency": "Daily",
       "format": "RSS",
       "reliability": "medium",
@@ -1925,7 +1978,7 @@
       "name": "The Asian Age",
       "short_name": "AsianAge",
       "type": "rss",
-      "url": "https://www.asianage.com/",
+      "url": "https://www.asianage.com/rss_feed/",
       "frequency": "Daily",
       "format": "RSS",
       "reliability": "medium",
@@ -1936,7 +1989,7 @@
       "name": "The Tribune",
       "short_name": "Tribune",
       "type": "rss",
-      "url": "https://www.tribuneindia.com/",
+      "url": "https://www.tribuneindia.com/rss/feed",
       "frequency": "Daily",
       "format": "RSS",
       "reliability": "medium",
@@ -1952,7 +2005,8 @@
       "format": "HTML",
       "reliability": "medium",
       "description": "Independent media criticism, investigative policy journalism",
-      "covers_sectors": "all"
+      "covers_sectors": "all",
+      "rss_url": "https://www.newslaundry.com/feed"
     },
     "article14": {
       "name": "Article 14",
@@ -1977,13 +2031,14 @@
       "format": "HTML",
       "reliability": "high",
       "description": "Long-form investigative journalism, policy deep-dives",
-      "covers_sectors": "all"
+      "covers_sectors": "all",
+      "rss_url": "https://caravanmagazine.in/feed"
     },
     "moneycontrol": {
       "name": "Moneycontrol",
       "short_name": "MC",
       "type": "rss",
-      "url": "https://www.moneycontrol.com/",
+      "url": "https://www.moneycontrol.com/rss/economy.xml",
       "frequency": "Daily",
       "format": "RSS",
       "reliability": "medium",
@@ -2240,7 +2295,7 @@
       "name": "Swarajya Magazine",
       "short_name": "Swarajya",
       "type": "rss",
-      "url": "https://swarajyamag.com/",
+      "url": "https://swarajyamag.com/feed",
       "frequency": "Daily",
       "format": "RSS",
       "reliability": "medium",
@@ -2251,7 +2306,7 @@
       "name": "ThePrint Diplomacy",
       "short_name": "Print Dip",
       "type": "rss",
-      "url": "https://theprint.in/diplomacy/",
+      "url": "https://theprint.in/diplomacy/feed/",
       "frequency": "Daily",
       "format": "RSS",
       "reliability": "medium",
@@ -2264,29 +2319,31 @@
       "name": "India Today",
       "short_name": "IndiaToday",
       "type": "rss",
-      "url": "https://www.indiatoday.in/",
+      "url": "https://www.indiatoday.in/rss/home",
       "frequency": "Daily",
       "format": "RSS",
       "reliability": "medium",
       "description": "India's largest newsmagazine, policy and political coverage",
-      "covers_sectors": "all"
+      "covers_sectors": "all",
+      "rss_url": "https://www.indiatoday.in/rss/home"
     },
     "republic_world": {
       "name": "Republic World",
       "short_name": "Republic",
       "type": "rss",
-      "url": "https://www.republicworld.com/",
+      "url": "https://www.republicworld.com/rss/india.xml",
       "frequency": "Daily",
       "format": "RSS",
       "reliability": "medium",
       "description": "News network covering policy, governance, politics",
-      "covers_sectors": "all"
+      "covers_sectors": "all",
+      "rss_url": "https://www.republicworld.com/rss/india.xml"
     },
     "ani_news": {
       "name": "ANI News",
       "short_name": "ANI",
       "type": "rss",
-      "url": "https://aninews.in/",
+      "url": "https://aninews.in/feed/",
       "frequency": "Daily",
       "format": "RSS",
       "reliability": "medium",
@@ -2297,7 +2354,7 @@
       "name": "PTI News",
       "short_name": "PTI",
       "type": "rss",
-      "url": "https://www.ptinews.com/",
+      "url": "https://www.ptinews.com/feed/",
       "frequency": "Daily",
       "format": "RSS",
       "reliability": "high",
@@ -2329,7 +2386,8 @@
       "covers_sectors": [
         "Trade & Commerce",
         "Defence & Security"
-      ]
+      ],
+      "rss_url": "https://www.gatewayhouse.in/feed/"
     },
     "chatham_house_india": {
       "name": "Chatham House India",
@@ -2434,7 +2492,8 @@
       "reliability": "medium",
       "description": "Citizen engagement platform with government scheme updates",
       "covers_sectors": "all",
-      "level": "central"
+      "level": "central",
+      "rss_url": "https://www.mygov.in/rss.xml"
     },
     "gst_council": {
       "name": "GST Council",
@@ -2464,7 +2523,8 @@
         "Governance & Reform",
         "Digital & Technology"
       ],
-      "level": "central"
+      "level": "central",
+      "rss_url": "https://darpg.gov.in/rss.xml"
     },
     "nhm": {
       "name": "National Health Mission",
@@ -3188,7 +3248,8 @@
         "Climate & Environment",
         "Energy"
       ],
-      "level": "central"
+      "level": "central",
+      "rss_url": "https://www.teriin.org/feed"
     },
     "epod_harvard": {
       "name": "Evidence for Policy Design (Harvard)",
@@ -3233,7 +3294,8 @@
         "Digital & Technology",
         "Governance & Reform"
       ],
-      "level": "central"
+      "level": "central",
+      "rss_url": "https://govinsider.asia/feed/"
     },
     "indiawaterportal": {
       "name": "India Water Portal",
@@ -3323,7 +3385,8 @@
       "reliability": "high",
       "description": "India news from India Today",
       "covers_sectors": "all",
-      "level": "central"
+      "level": "central",
+      "rss_url": "https://www.indiatoday.in/rss/home"
     },
     "news18_rss": {
       "name": "News18 India (RSS)",
@@ -3894,7 +3957,8 @@
       "reliability": "high",
       "description": "Academic journal on Indian political economy, social policy, and development",
       "covers_sectors": "all",
-      "level": "central"
+      "level": "central",
+      "rss_url": "https://www.epw.in/rss.xml"
     },
     "nlsiu": {
       "name": "National Law School of India University",
@@ -3977,7 +4041,8 @@
       "covers_sectors": [
         "Governance & Reform"
       ],
-      "level": "central"
+      "level": "central",
+      "rss_url": "https://www.livelaw.in/feed"
     },
     "idronline": {
       "name": "IDR Online",
@@ -4039,39 +4104,6 @@
       ],
       "level": "central"
     },
-    "dpiit": {
-      "name": "Department for Promotion of Industry and Internal Trade",
-      "short_name": "DPIIT",
-      "type": "rss",
-      "url": "https://dpiit.gov.in/rss.xml",
-      "backup_urls": [
-        "https://dpiit.gov.in/policies-rules-and-acts"
-      ],
-      "frequency": "Weekly",
-      "format": "RSS + HTML",
-      "reliability": "high",
-      "covers_sectors": [
-        "Trade & Commerce",
-        "Digital & Technology",
-        "Finance & Economy"
-      ]
-    },
-    "fssai": {
-      "name": "Food Safety and Standards Authority of India",
-      "short_name": "FSSAI",
-      "type": "rss",
-      "url": "https://www.fssai.gov.in/rss/orders-and-regulations.xml",
-      "backup_urls": [
-        "https://www.fssai.gov.in/cms/orders-and-regulations.php"
-      ],
-      "frequency": "Weekly",
-      "format": "RSS",
-      "reliability": "high",
-      "covers_sectors": [
-        "Health",
-        "Agriculture"
-      ]
-    },
     "cci": {
       "name": "Competition Commission of India",
       "short_name": "CCI",
@@ -4113,7 +4145,8 @@
         "Transport & Infrastructure",
         "Energy",
         "Climate & Environment"
-      ]
+      ],
+      "rss_url": "https://www.adb.org/news/india/feed"
     },
     "ilo_india": {
       "name": "International Labour Organization - India",
@@ -4127,20 +4160,8 @@
         "Labour & Employment",
         "Social Protection",
         "Gender & Women"
-      ]
-    },
-    "npci": {
-      "name": "National Payments Corporation of India",
-      "short_name": "NPCI",
-      "type": "scrape",
-      "url": "https://www.npci.org.in/what-we-do/upi/circular-and-advisory",
-      "frequency": "Monthly",
-      "format": "HTML",
-      "reliability": "high",
-      "covers_sectors": [
-        "Digital & Technology",
-        "Finance & Economy"
-      ]
+      ],
+      "rss_url": "https://www.ilo.org/resource/news/rss/country/india"
     },
     "imf_india": {
       "name": "International Monetary Fund - India",
@@ -4153,23 +4174,8 @@
       "covers_sectors": [
         "Finance & Economy",
         "Trade & Commerce"
-      ]
-    },
-    "mospi": {
-      "name": "Ministry of Statistics and Programme Implementation",
-      "short_name": "MoSPI",
-      "type": "rss",
-      "url": "https://www.mospi.gov.in/web/mospi/rss-feeds",
-      "backup_urls": [
-        "https://www.mospi.gov.in/publication/statistical-year-book-india"
       ],
-      "frequency": "Monthly",
-      "format": "RSS + HTML",
-      "reliability": "high",
-      "covers_sectors": [
-        "Governance & Reform",
-        "Finance & Economy"
-      ]
+      "rss_url": "https://www.imf.org/en/Countries/IND/rss"
     },
     "ka_gazette": {
       "name": "Karnataka Gazette",

@@ -540,9 +540,19 @@ def fetch_source(source_id: str, source_config: dict) -> list[dict]:
 
     try:
         if source_type == "rss":
+            # Try url first, then rss_url if available
             raw_items = fetch_rss_source(source_config)
+            if not raw_items and source_config.get("rss_url"):
+                print(f"  Trying rss_url fallback...")
+                fallback_config = dict(source_config, url=source_config["rss_url"])
+                raw_items = fetch_rss_source(fallback_config)
         elif source_type == "scrape":
             raw_items = fetch_scrape_source(source_id, source_config)
+            # If scrape returned nothing and source has rss_url, try RSS
+            if not raw_items and source_config.get("rss_url"):
+                print(f"  Scrape empty, trying rss_url fallback...")
+                fallback_config = dict(source_config, url=source_config["rss_url"])
+                raw_items = fetch_rss_source(fallback_config)
         elif source_type == "api":
             raw_items = fetch_api_source(source_id, source_config)
         else:
