@@ -4038,6 +4038,198 @@
         "Rural Development"
       ],
       "level": "central"
+    },
+    "dpiit": {
+      "name": "Department for Promotion of Industry and Internal Trade",
+      "short_name": "DPIIT",
+      "type": "rss",
+      "url": "https://dpiit.gov.in/rss.xml",
+      "backup_urls": [
+        "https://dpiit.gov.in/policies-rules-and-acts"
+      ],
+      "frequency": "Weekly",
+      "format": "RSS + HTML",
+      "reliability": "high",
+      "covers_sectors": [
+        "Trade & Commerce",
+        "Digital & Technology",
+        "Finance & Economy"
+      ]
+    },
+    "fssai": {
+      "name": "Food Safety and Standards Authority of India",
+      "short_name": "FSSAI",
+      "type": "rss",
+      "url": "https://www.fssai.gov.in/rss/orders-and-regulations.xml",
+      "backup_urls": [
+        "https://www.fssai.gov.in/cms/orders-and-regulations.php"
+      ],
+      "frequency": "Weekly",
+      "format": "RSS",
+      "reliability": "high",
+      "covers_sectors": [
+        "Health",
+        "Agriculture"
+      ]
+    },
+    "cci": {
+      "name": "Competition Commission of India",
+      "short_name": "CCI",
+      "type": "scrape",
+      "url": "https://www.cci.gov.in/combination/orders-by-date",
+      "frequency": "Weekly",
+      "format": "HTML",
+      "reliability": "high",
+      "covers_sectors": [
+        "Trade & Commerce",
+        "Finance & Economy",
+        "Governance & Reform"
+      ]
+    },
+    "ngt": {
+      "name": "National Green Tribunal",
+      "short_name": "NGT",
+      "type": "scrape",
+      "url": "https://greentribunal.gov.in/orders",
+      "frequency": "Weekly",
+      "format": "HTML",
+      "reliability": "high",
+      "covers_sectors": [
+        "Climate & Environment",
+        "Water & Sanitation",
+        "Governance & Reform"
+      ]
+    },
+    "adb_india": {
+      "name": "Asian Development Bank - India",
+      "short_name": "ADB",
+      "type": "rss",
+      "url": "https://www.adb.org/news/india/feed",
+      "frequency": "Weekly",
+      "format": "RSS",
+      "reliability": "high",
+      "covers_sectors": [
+        "Finance & Economy",
+        "Transport & Infrastructure",
+        "Energy",
+        "Climate & Environment"
+      ]
+    },
+    "ilo_india": {
+      "name": "International Labour Organization - India",
+      "short_name": "ILO",
+      "type": "rss",
+      "url": "https://www.ilo.org/resource/news/rss/country/india",
+      "frequency": "Monthly",
+      "format": "RSS",
+      "reliability": "high",
+      "covers_sectors": [
+        "Labour & Employment",
+        "Social Protection",
+        "Gender & Women"
+      ]
+    },
+    "npci": {
+      "name": "National Payments Corporation of India",
+      "short_name": "NPCI",
+      "type": "scrape",
+      "url": "https://www.npci.org.in/what-we-do/upi/circular-and-advisory",
+      "frequency": "Monthly",
+      "format": "HTML",
+      "reliability": "high",
+      "covers_sectors": [
+        "Digital & Technology",
+        "Finance & Economy"
+      ]
+    },
+    "imf_india": {
+      "name": "International Monetary Fund - India",
+      "short_name": "IMF",
+      "type": "scrape",
+      "url": "https://www.imf.org/en/Countries/IND",
+      "frequency": "Quarterly",
+      "format": "HTML",
+      "reliability": "high",
+      "covers_sectors": [
+        "Finance & Economy",
+        "Trade & Commerce"
+      ]
+    },
+    "mospi": {
+      "name": "Ministry of Statistics and Programme Implementation",
+      "short_name": "MoSPI",
+      "type": "rss",
+      "url": "https://www.mospi.gov.in/web/mospi/rss-feeds",
+      "backup_urls": [
+        "https://www.mospi.gov.in/publication/statistical-year-book-india"
+      ],
+      "frequency": "Monthly",
+      "format": "RSS + HTML",
+      "reliability": "high",
+      "covers_sectors": [
+        "Governance & Reform",
+        "Finance & Economy"
+      ]
+    },
+    "ka_gazette": {
+      "name": "Karnataka Gazette",
+      "short_name": "KA Govt",
+      "type": "scrape",
+      "url": "https://egazette.karnataka.gov.in/",
+      "frequency": "Weekly",
+      "format": "HTML",
+      "reliability": "medium",
+      "level": "state",
+      "state": "Karnataka",
+      "covers_sectors": "all"
+    },
+    "tn_gazette": {
+      "name": "Tamil Nadu Gazette",
+      "short_name": "TN Govt",
+      "type": "scrape",
+      "url": "https://www.stationeryprinting.tn.gov.in/extraordinary.php",
+      "frequency": "Weekly",
+      "format": "HTML",
+      "reliability": "medium",
+      "level": "state",
+      "state": "Tamil Nadu",
+      "covers_sectors": "all"
+    },
+    "rj_gazette": {
+      "name": "Rajasthan Gazette",
+      "short_name": "RJ Govt",
+      "type": "scrape",
+      "url": "https://rajssp.rajasthan.gov.in/",
+      "frequency": "Weekly",
+      "format": "HTML",
+      "reliability": "medium",
+      "level": "state",
+      "state": "Rajasthan",
+      "covers_sectors": "all"
+    },
+    "mh_gazette": {
+      "name": "Maharashtra Government Gazette",
+      "short_name": "MH Govt",
+      "type": "scrape",
+      "url": "https://egazzete.mahaonline.gov.in/",
+      "frequency": "Weekly",
+      "format": "HTML",
+      "reliability": "medium",
+      "level": "state",
+      "state": "Maharashtra",
+      "covers_sectors": "all"
+    },
+    "up_gazette": {
+      "name": "Uttar Pradesh Gazette",
+      "short_name": "UP Govt",
+      "type": "scrape",
+      "url": "https://upgov.up.nic.in/",
+      "frequency": "Weekly",
+      "format": "HTML",
+      "reliability": "medium",
+      "level": "state",
+      "state": "Uttar Pradesh",
+      "covers_sectors": "all"
     }
   }
 }

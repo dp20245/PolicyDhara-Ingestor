@@ -2,9 +2,21 @@
 Keyword-based sector classifier for Indian policy items.
 Maps policy text (title + description) to one or more of 21 development sectors.
 No ML dependencies — fast and deterministic.
+
+Uses TF-IDF-inspired weighting:
+- Keywords unique to one sector get weight 3 (highly specific)
+- Keywords in 2 sectors get weight 2
+- Keywords in 3+ sectors get weight 1 (common terms)
+
+Also applies word-boundary matching for short keywords (<=3 chars) to avoid
+false positives like "IT" matching inside "with".
+
+Matches in the title count 2x (title boost).
 """
 
 from __future__ import annotations
+
+import re
 
 SECTOR_KEYWORDS: dict[str, list[str]] = {
     "Education": [
@@ -194,11 +206,93 @@ SECTOR_KEYWORDS: dict[str, list[str]] = {
 }
 
 
+def _build_keyword_pattern(keyword: str) -> re.Pattern[str]:
+    """Build a compiled regex pattern for a keyword.
+
+    Short keywords (<=3 chars) use word-boundary matching to avoid
+    false positives like 'IT' matching inside 'with'.
+    Longer keywords use simple substring containment (case-insensitive).
+    """
+    escaped = re.escape(keyword.lower())
+    if len(keyword) <= 3:
+        # Word-boundary match for short keywords
+        return re.compile(r"\b" + escaped + r"\b", re.IGNORECASE)
+    else:
+        # Substring match for longer keywords (same as before but compiled)
+        return re.compile(escaped, re.IGNORECASE)
+
+
 class PolicyClassifier:
-    """Classify policy text into one or more of 21 Indian development sectors."""
+    """Classify policy text into one or more of 21 Indian development sectors.
+
+    Improvements over naive keyword counting:
+    - IDF-like weighting: keywords unique to one sector score higher
+    - Word-boundary matching for short keywords (avoids false positives)
+    - Title boost: matches in the title count 2x
+    """
 
     def __init__(self, keywords: dict[str, list[str]] | None = None):
         self.keywords = keywords or SECTOR_KEYWORDS
+        # Pre-compute IDF-like weights and compiled patterns
+        self._keyword_weights: dict[str, int] = self._compute_idf_weights()
+        self._keyword_patterns: dict[str, re.Pattern[str]] = {}
+        for sector, kws in self.keywords.items():
+            for kw in kws:
+                kw_lower = kw.lower()
+                if kw_lower not in self._keyword_patterns:
+                    self._keyword_patterns[kw_lower] = _build_keyword_pattern(kw)
+
+    def _compute_idf_weights(self) -> dict[str, int]:
+        """Compute IDF-like weights for each keyword.
+
+        - Keyword in only 1 sector: weight 3 (highly specific)
+        - Keyword in 2 sectors: weight 2
+        - Keyword in 3+ sectors: weight 1 (common/generic)
+        """
+        # Count how many sectors each keyword appears in
+        keyword_sector_count: dict[str, int] = {}
+        for sector, kws in self.keywords.items():
+            for kw in kws:
+                kw_lower = kw.lower()
+                if kw_lower not in keyword_sector_count:
+                    keyword_sector_count[kw_lower] = 0
+                keyword_sector_count[kw_lower] += 1
+
+        weights: dict[str, int] = {}
+        for kw_lower, count in keyword_sector_count.items():
+            if count == 1:
+                weights[kw_lower] = 3
+            elif count == 2:
+                weights[kw_lower] = 2
+            else:
+                weights[kw_lower] = 1
+        return weights
+
+    def _score_text(self, title: str, description: str) -> dict[str, float]:
+        """Score each sector against title + description with IDF weights and title boost."""
+        title_lower = title.lower()
+        desc_lower = description.lower()
+        scores: dict[str, float] = {}
+
+        for sector, kws in self.keywords.items():
+            score = 0.0
+            for kw in kws:
+                kw_lower = kw.lower()
+                pattern = self._keyword_patterns[kw_lower]
+                weight = self._keyword_weights[kw_lower]
+
+                title_match = bool(pattern.search(title_lower))
+                desc_match = bool(pattern.search(desc_lower))
+
+                if title_match:
+                    score += weight * 2  # title boost: 2x
+                if desc_match:
+                    score += weight
+
+            if score > 0:
+                scores[sector] = score
+
+        return scores
 
     def classify(
         self,
@@ -219,13 +313,7 @@ class PolicyClassifier:
         Returns:
             List of matched sector names, sorted by relevance.
         """
-        text = f"{title} {description}".lower()
-        scores: dict[str, int] = {}
-
-        for sector, keywords in self.keywords.items():
-            score = sum(1 for kw in keywords if kw.lower() in text)
-            if score > 0:
-                scores[sector] = score
+        scores = self._score_text(title, description)
 
         if not scores:
             if source_sectors and source_sectors != "all":
@@ -239,13 +327,10 @@ class PolicyClassifier:
 
     def scores(self, title: str, description: str = "") -> dict[str, int]:
         """Return raw keyword match scores for all sectors."""
-        text = f"{title} {description}".lower()
-        result: dict[str, int] = {}
-        for sector, keywords in self.keywords.items():
-            score = sum(1 for kw in keywords if kw.lower() in text)
-            if score > 0:
-                result[sector] = score
-        return dict(sorted(result.items(), key=lambda x: x[1], reverse=True))
+        raw_scores = self._score_text(title, description)
+        # Convert to int for backward compatibility
+        int_scores = {k: int(v) for k, v in raw_scores.items()}
+        return dict(sorted(int_scores.items(), key=lambda x: x[1], reverse=True))
 
     @property
     def sectors(self) -> list[str]:
