@@ -1,0 +1,498 @@
+---
+import Base from '../layouts/Base.astro';
+import { getAllPolicies, getMeta } from '../lib/data';
+
+const meta = getMeta();
+const rawBase = import.meta.env.BASE_URL;
+const base = rawBase.endsWith('/') ? rawBase : rawBase + '/';
+const siteOrigin = 'https://varnasr.github.io';
+const embedBase = `${siteOrigin}${base}embed/`;
+const sectorList = Object.entries(meta.sector_counts).sort(([,a], [,b]) => b - a);
+---
+<Base title="Embed Widgets" description="Embed live PolicyDhara data on your website using iframes or a lightweight JavaScript widget.">
+  <div style="padding: var(--space-xl) 0;">
+    <h2 class="page-title">Embed Widgets</h2>
+    <p class="page-subtitle">Add live Indian policy data to your website, blog, or dashboard. Three options from simple badge to full feed.</p>
+
+    {/* Overview stats */}
+    <div class="embed-stats">
+      <div class="embed-stat">
+        <span class="embed-stat-num">3</span>
+        <span class="embed-stat-label">Widget Types</span>
+      </div>
+      <div class="embed-stat">
+        <span class="embed-stat-num">{meta.total_policies}</span>
+        <span class="embed-stat-label">Policies Available</span>
+      </div>
+      <div class="embed-stat">
+        <span class="embed-stat-num">{Object.keys(meta.sector_counts).length}</span>
+        <span class="embed-stat-label">Sectors</span>
+      </div>
+      <div class="embed-stat">
+        <span class="embed-stat-num">0</span>
+        <span class="embed-stat-label">Dependencies</span>
+      </div>
+    </div>
+
+    {/* Option 1: Stats Badge */}
+    <div class="embed-section">
+      <div class="embed-section-header">
+        <span class="embed-option-num">1</span>
+        <div>
+          <h3>Stats Badge</h3>
+          <p class="embed-desc">A compact inline badge showing total policy count and sources. Perfect for sidebars and footers.</p>
+        </div>
+      </div>
+      <div class="embed-specs">
+        <span class="embed-spec">300 x 80px</span>
+        <span class="embed-spec">iframe</span>
+        <span class="embed-spec">No JS required</span>
+      </div>
+      <div class="embed-code-block">
+        <div class="embed-code-label">Embed Code</div>
+        <pre class="embed-pre"><code id="code-stats">&lt;iframe src="{embedBase}stats/" width="300" height="80" frameborder="0" style="border:none;border-radius:8px;overflow:hidden;"&gt;&lt;/iframe&gt;</code></pre>
+        <button class="embed-copy-btn" data-target="code-stats">Copy</button>
+      </div>
+      <div class="embed-preview-wrap">
+        <div class="embed-preview-label">Live Preview</div>
+        <div class="embed-preview" style="max-width:320px;">
+          <iframe src={`${base}embed/stats/`} width="300" height="80" frameborder="0" style="border:none;border-radius:8px;overflow:hidden;"></iframe>
+        </div>
+      </div>
+    </div>
+
+    {/* Option 2: Sector Feed */}
+    <div class="embed-section">
+      <div class="embed-section-header">
+        <span class="embed-option-num">2</span>
+        <div>
+          <h3>Sector Feed</h3>
+          <p class="embed-desc">A compact feed of recent policies filtered by sector. Great for topic-specific pages.</p>
+        </div>
+      </div>
+      <div class="embed-specs">
+        <span class="embed-spec">400 x 300px</span>
+        <span class="embed-spec">iframe</span>
+        <span class="embed-spec">Sector filter via URL</span>
+      </div>
+      <div class="embed-config">
+        <label class="embed-config-label">Preview sector:</label>
+        <select id="feed-sector-select" class="embed-select">
+          <option value="">All Sectors</option>
+          {sectorList.map(([s]) => <option value={s}>{s}</option>)}
+        </select>
+        <label class="embed-config-label">Limit:</label>
+        <select id="feed-limit-select" class="embed-select">
+          <option value="3">3</option>
+          <option value="5" selected>5</option>
+          <option value="10">10</option>
+        </select>
+      </div>
+      <div class="embed-code-block">
+        <div class="embed-code-label">Embed Code</div>
+        <pre class="embed-pre"><code id="code-feed">&lt;iframe src="{embedBase}feed/" width="400" height="300" frameborder="0" style="border:none;border-radius:8px;overflow:hidden;"&gt;&lt;/iframe&gt;</code></pre>
+        <button class="embed-copy-btn" data-target="code-feed">Copy</button>
+      </div>
+      <div class="embed-preview-wrap">
+        <div class="embed-preview-label">Live Preview</div>
+        <div class="embed-preview" id="feed-preview-container" style="max-width:420px;">
+          <iframe id="feed-preview-iframe" src={`${base}embed/feed/`} width="400" height="300" frameborder="0" style="border:none;border-radius:8px;overflow:hidden;"></iframe>
+        </div>
+      </div>
+    </div>
+
+    {/* Option 3: JavaScript Widget */}
+    <div class="embed-section">
+      <div class="embed-section-header">
+        <span class="embed-option-num">3</span>
+        <div>
+          <h3>JavaScript Widget</h3>
+          <p class="embed-desc">Drop in a <code>&lt;div&gt;</code> and a <code>&lt;script&gt;</code> tag. The widget automatically creates an embedded feed using configurable data attributes.</p>
+        </div>
+      </div>
+      <div class="embed-specs">
+        <span class="embed-spec">Responsive</span>
+        <span class="embed-spec">~1KB script</span>
+        <span class="embed-spec">data-* config</span>
+      </div>
+      <div class="embed-code-block">
+        <div class="embed-code-label">Embed Code</div>
+        <pre class="embed-pre"><code id="code-widget">&lt;div id="policydhara-widget" data-sector="health" data-limit="5"&gt;&lt;/div&gt;
+&lt;script src="{siteOrigin}{base}embed/widget.js"&gt;&lt;/script&gt;</code></pre>
+        <button class="embed-copy-btn" data-target="code-widget">Copy</button>
+      </div>
+
+      <div class="embed-attr-table">
+        <div class="embed-attr-header">
+          <span>Attribute</span>
+          <span>Default</span>
+          <span>Description</span>
+        </div>
+        <div class="embed-attr-row">
+          <span><code>data-sector</code></span>
+          <span>(none)</span>
+          <span>Filter by sector slug, e.g. <code>health</code>, <code>education</code>, <code>finance-economy</code></span>
+        </div>
+        <div class="embed-attr-row">
+          <span><code>data-limit</code></span>
+          <span>5</span>
+          <span>Number of policies to show (1-20)</span>
+        </div>
+        <div class="embed-attr-row">
+          <span><code>data-theme</code></span>
+          <span>light</span>
+          <span>Color theme: <code>light</code> or <code>dark</code></span>
+        </div>
+      </div>
+
+      <div class="embed-preview-wrap">
+        <div class="embed-preview-label">Live Preview</div>
+        <div class="embed-preview" style="max-width:420px;">
+          <div id="policydhara-widget" data-sector="" data-limit="5"></div>
+        </div>
+      </div>
+    </div>
+
+    {/* Sector Slugs Reference */}
+    <div class="embed-section">
+      <h3>Sector Slug Reference</h3>
+      <p class="embed-desc">Use these slugs in <code>data-sector</code> or the <code>?sector=</code> URL parameter.</p>
+      <div class="embed-slugs">
+        {sectorList.map(([sector]) => {
+          const slug = sector.toLowerCase().replace(/ & /g, '-').replace(/ /g, '-');
+          return (
+            <div class="embed-slug-row">
+              <span class="embed-slug-name">{sector}</span>
+              <code class="embed-slug-code">{slug}</code>
+              <span class="embed-slug-count">{meta.sector_counts[sector]}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+
+    {/* License */}
+    <div class="embed-section">
+      <h3>License & Attribution</h3>
+      <p class="embed-desc">
+        All embed widgets include a "Powered by PolicyDhara" link. The widgets and data are free to use under
+        <strong>CC BY 4.0</strong>. Please keep the attribution link intact. For custom integrations,
+        see the <a href={`${base}api/`}>API & Data Export</a> page.
+      </p>
+    </div>
+  </div>
+</Base>
+
+{/* Load the widget script for the JS widget preview */}
+<script is:inline define:vars={{ base }}>
+  (function() {
+    var s = document.createElement('script');
+    s.src = base + 'embed/widget.js';
+    document.body.appendChild(s);
+  })();
+</script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // Copy buttons
+    document.querySelectorAll('.embed-copy-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetId = (btn as HTMLElement).dataset.target;
+        const codeEl = document.getElementById(targetId || '');
+        if (!codeEl) return;
+        navigator.clipboard.writeText(codeEl.textContent || '').then(() => {
+          const orig = btn.textContent;
+          btn.textContent = 'Copied!';
+          setTimeout(() => { btn.textContent = orig; }, 1500);
+        });
+      });
+    });
+
+    // Feed configurator
+    const sectorSelect = document.getElementById('feed-sector-select') as HTMLSelectElement;
+    const limitSelect = document.getElementById('feed-limit-select') as HTMLSelectElement;
+    const feedCode = document.getElementById('code-feed');
+    const feedIframe = document.getElementById('feed-preview-iframe') as HTMLIFrameElement;
+
+    function updateFeed() {
+      if (!sectorSelect || !limitSelect || !feedCode || !feedIframe) return;
+      const sector = sectorSelect.value;
+      const limit = limitSelect.value;
+      const slug = sector ? sector.toLowerCase().replace(/ & /g, '-').replace(/ /g, '-') : '';
+
+      const params = new URLSearchParams();
+      if (slug) params.set('sector', slug);
+      if (limit !== '5') params.set('limit', limit);
+      const qs = params.toString();
+
+      const embedBase = 'https://varnasr.github.io/PolicyDhara/embed/';
+      const localBase = feedIframe.src.split('/embed/feed/')[0] + '/embed/feed/';
+
+      feedCode.textContent = `<iframe src="${embedBase}feed/${qs ? '?' + qs : ''}" width="400" height="300" frameborder="0" style="border:none;border-radius:8px;overflow:hidden;"></iframe>`;
+      feedIframe.src = `${localBase}${qs ? '?' + qs : ''}`;
+    }
+
+    sectorSelect?.addEventListener('change', updateFeed);
+    limitSelect?.addEventListener('change', updateFeed);
+  });
+</script>
+
+<style>
+  .embed-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: var(--space-xl);
+  }
+  .embed-stat {
+    background: var(--color-bg-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-md);
+    text-align: center;
+    box-shadow: var(--shadow-card);
+  }
+  .embed-stat-num {
+    display: block;
+    font-family: 'Newsreader', Georgia, serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+  .embed-stat-label {
+    font-size: 0.625rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-muted);
+    font-weight: 600;
+  }
+
+  .embed-section {
+    margin-bottom: var(--space-xl);
+    padding-bottom: var(--space-xl);
+    border-bottom: 1px solid var(--color-border-light);
+  }
+  .embed-section:last-child {
+    border-bottom: none;
+  }
+
+  .embed-section-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: var(--space-md);
+  }
+  .embed-option-num {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--color-accent);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .embed-section h3 {
+    font-family: 'Newsreader', Georgia, serif;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: 4px;
+  }
+  .embed-desc {
+    font-size: 0.8125rem;
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-md);
+    line-height: 1.6;
+  }
+  .embed-desc code {
+    background: var(--color-bg-alt);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 0.75rem;
+  }
+
+  .embed-specs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: var(--space-md);
+    flex-wrap: wrap;
+  }
+  .embed-spec {
+    font-size: 0.6875rem;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: var(--color-bg-alt);
+    color: var(--color-text-muted);
+    font-weight: 500;
+  }
+
+  .embed-config {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: var(--space-md);
+    flex-wrap: wrap;
+  }
+  .embed-config-label {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    font-weight: 600;
+  }
+  .embed-select {
+    padding: 6px 10px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 0.75rem;
+    color: var(--color-text);
+    background: var(--color-bg-white);
+  }
+
+  .embed-code-block {
+    position: relative;
+    margin-bottom: var(--space-md);
+  }
+  .embed-code-label {
+    font-size: 0.625rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-muted);
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .embed-pre {
+    background: var(--color-bg-alt);
+    border-radius: var(--radius-lg);
+    padding: var(--space-md) var(--space-lg);
+    overflow-x: auto;
+    margin: 0;
+    font-family: 'DM Mono', monospace, monospace;
+    font-size: 0.7rem;
+    color: var(--color-text);
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+  .embed-copy-btn {
+    position: absolute;
+    top: 24px;
+    right: 8px;
+    padding: 4px 12px;
+    font-size: 0.6875rem;
+    font-family: inherit;
+    font-weight: 600;
+    background: var(--color-accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .embed-copy-btn:hover { opacity: 0.85; }
+
+  .embed-preview-wrap {
+    margin-top: var(--space-md);
+  }
+  .embed-preview-label {
+    font-size: 0.625rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-muted);
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .embed-preview {
+    background: var(--color-bg-alt);
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-md);
+    display: flex;
+    justify-content: center;
+  }
+
+  .embed-attr-table {
+    background: var(--color-bg-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-card);
+    margin-bottom: var(--space-md);
+  }
+  .embed-attr-header,
+  .embed-attr-row {
+    display: flex;
+    gap: 8px;
+    padding: 8px 16px;
+    border-top: 1px solid var(--color-border-light);
+  }
+  .embed-attr-header {
+    border-top: none;
+    background: var(--color-bg-alt);
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-muted);
+  }
+  .embed-attr-row span:first-child { flex: 0 0 140px; }
+  .embed-attr-row span:nth-child(2) { flex: 0 0 70px; font-size: 0.75rem; color: var(--color-text-dim); }
+  .embed-attr-row span:last-child { flex: 1; font-size: 0.75rem; color: var(--color-text-muted); }
+  .embed-attr-header span:first-child { flex: 0 0 140px; }
+  .embed-attr-header span:nth-child(2) { flex: 0 0 70px; }
+  .embed-attr-header span:last-child { flex: 1; }
+  .embed-attr-row code {
+    background: var(--color-bg-alt);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 0.7rem;
+  }
+
+  .embed-slugs {
+    background: var(--color-bg-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-card);
+    max-height: 320px;
+    overflow-y: auto;
+  }
+  .embed-slug-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    border-top: 1px solid var(--color-border-light);
+  }
+  .embed-slug-row:first-child { border-top: none; }
+  .embed-slug-name {
+    flex: 1;
+    font-size: 0.75rem;
+    color: var(--color-text);
+  }
+  .embed-slug-code {
+    font-size: 0.7rem;
+    background: var(--color-bg-alt);
+    padding: 2px 8px;
+    border-radius: 3px;
+    color: var(--color-accent);
+    font-weight: 600;
+  }
+  .embed-slug-count {
+    font-size: 0.6875rem;
+    color: var(--color-text-dim);
+    min-width: 30px;
+    text-align: right;
+  }
+
+  @media (max-width: 768px) {
+    .embed-stats { grid-template-columns: repeat(2, 1fr); }
+    .embed-section-header { flex-direction: column; gap: 8px; }
+    .embed-attr-row span:first-child { flex: 0 0 100px; }
+    .embed-attr-row span:nth-child(2) { flex: 0 0 50px; }
+  }
+</style>
