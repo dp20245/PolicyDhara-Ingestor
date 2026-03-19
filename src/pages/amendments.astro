@@ -1,0 +1,415 @@
+---
+import Base from '../layouts/Base.astro';
+import { getAmendments, getRecentAmendments, getAllPolicies, getSectorSlug } from '../lib/data';
+import type { Amendment } from '../lib/data';
+
+const base = (import.meta.env.BASE_URL).replace(/\/?$/, '/');
+
+const allAmendments = getAmendments();
+const recentAmended = getRecentAmendments(50);
+
+// Summary stats
+const totalAmendedPolicies = Object.keys(allAmendments).filter(k => allAmendments[k].length > 0).length;
+const totalChanges = Object.values(allAmendments).reduce((sum, arr) => sum + arr.length, 0);
+
+// Collect all sectors from amended policies for the filter
+const sectorSet = new Set<string>();
+for (const { policy } of recentAmended) {
+  for (const s of policy.sectors) sectorSet.add(s);
+}
+const allSectors = [...sectorSet].sort();
+
+function formatDate(dateStr: string): string {
+  try {
+    return new Date(dateStr).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  } catch { return dateStr; }
+}
+
+function fieldLabel(field: string): string {
+  const labels: Record<string, string> = {
+    title: 'Title',
+    description: 'Description',
+    type: 'Type',
+    sectors: 'Sectors',
+  };
+  return labels[field] || field.charAt(0).toUpperCase() + field.slice(1);
+}
+---
+<Base title="Amendments" description="Track policy changes, amendments, and text diffs across Indian government policies.">
+  <div class="amendments-page">
+    <div class="page-header">
+      <nav class="breadcrumb">
+        <a href={base}>Home</a>
+        <span class="bc-sep">/</span>
+        <span>Amendments</span>
+      </nav>
+      <h1 class="page-title">Amendment Tracker</h1>
+      <p class="page-desc">Track when policies are updated, amended, or reclassified. Visual diffs show exactly what changed.</p>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <span class="stat-num">{totalAmendedPolicies}</span>
+        <span class="stat-label">Amended Policies</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num">{totalChanges}</span>
+        <span class="stat-label">Total Changes Tracked</span>
+      </div>
+    </div>
+
+    {allSectors.length > 0 && (
+      <div class="filter-bar">
+        <label class="filter-label" for="sector-filter">Filter by sector</label>
+        <select id="sector-filter" class="filter-select">
+          <option value="">All Sectors</option>
+          {allSectors.map(s => (
+            <option value={s}>{s}</option>
+          ))}
+        </select>
+      </div>
+    )}
+
+    {recentAmended.length === 0 ? (
+      <div class="empty-state">
+        <p>No amendments have been recorded yet. Amendment tracking begins when a policy reappears with changed text during the fetch pipeline.</p>
+      </div>
+    ) : (
+      <div class="amendments-list" id="amendments-list">
+        {recentAmended.map(({ policy, amendments }) => (
+          <article class="amendment-entry" data-sectors={JSON.stringify(policy.sectors)}>
+            <div class="amendment-header">
+              <a href={`${base}policies/${policy.id}/`} class="amendment-title">{policy.title}</a>
+              <div class="amendment-meta">
+                <span class="amendment-source">{policy.source_short}</span>
+                <span class="amendment-date">{formatDate(policy.date)}</span>
+                <span class="amendment-count">{amendments.length} change{amendments.length !== 1 ? 's' : ''}</span>
+              </div>
+              <div class="amendment-sectors">
+                {policy.sectors.map((s: string) => (
+                  <a href={`${base}sectors/${getSectorSlug(s)}/`} class="sector-pill">{s}</a>
+                ))}
+              </div>
+            </div>
+            <div class="amendment-timeline">
+              {amendments.map((a: Amendment) => (
+                <div class="amendment-change">
+                  <div class="change-header">
+                    <span class="change-field">{fieldLabel(a.field)}</span>
+                    <span class="change-date">{formatDate(a.date)}</span>
+                    {a.source_id && <span class="change-source">via {a.source_id}</span>}
+                  </div>
+                  <div class="change-diff">
+                    <div class="diff-old"><del>{a.old_value}</del></div>
+                    <div class="diff-new"><ins>{a.new_value}</ins></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </article>
+        ))}
+      </div>
+    )}
+  </div>
+</Base>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const filter = document.getElementById('sector-filter') as HTMLSelectElement | null;
+    const list = document.getElementById('amendments-list');
+    if (!filter || !list) return;
+
+    filter.addEventListener('change', () => {
+      const val = filter.value;
+      const entries = list.querySelectorAll('.amendment-entry');
+      entries.forEach(entry => {
+        if (!val) {
+          (entry as HTMLElement).style.display = '';
+          return;
+        }
+        const sectors: string[] = JSON.parse((entry as HTMLElement).dataset.sectors || '[]');
+        (entry as HTMLElement).style.display = sectors.includes(val) ? '' : 'none';
+      });
+    });
+  });
+</script>
+
+<style>
+  .amendments-page {
+    max-width: 960px;
+    padding: var(--space-xl) 0 var(--space-2xl);
+  }
+
+  .page-header {
+    margin-bottom: var(--space-xl);
+  }
+
+  .breadcrumb {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 0.8125rem; color: var(--color-text-muted);
+    margin-bottom: var(--space-md);
+  }
+  .breadcrumb a { color: var(--color-text-muted); }
+  .breadcrumb a:hover { color: var(--color-accent); }
+  .bc-sep { color: var(--color-text-dim); }
+
+  .page-title {
+    font-family: 'Newsreader', Georgia, serif;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--color-text);
+    letter-spacing: -0.02em;
+    margin-bottom: var(--space-sm);
+  }
+  .page-desc {
+    font-size: 0.9375rem;
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+  }
+
+  /* Stats */
+  .stats-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: var(--space-lg);
+  }
+  .stat-card {
+    background: var(--color-bg-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 16px 24px;
+    box-shadow: var(--shadow-card);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .stat-num {
+    font-family: 'Newsreader', Georgia, serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+  .stat-label {
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-muted);
+    font-weight: 600;
+  }
+
+  /* Filter */
+  .filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: var(--space-lg);
+  }
+  .filter-label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+  }
+  .filter-select {
+    padding: 6px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-size: 0.8125rem;
+    color: var(--color-text);
+    background: var(--color-bg-white);
+    cursor: pointer;
+  }
+  .filter-select:focus {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 1px;
+  }
+
+  /* Empty */
+  .empty-state {
+    background: var(--color-bg-alt);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    text-align: center;
+  }
+  .empty-state p {
+    font-size: 0.9375rem;
+    color: var(--color-text-muted);
+    line-height: 1.6;
+  }
+
+  /* Amendment entries */
+  .amendments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .amendment-entry {
+    background: var(--color-bg-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    box-shadow: var(--shadow-card);
+  }
+
+  .amendment-header {
+    margin-bottom: var(--space-md);
+  }
+  .amendment-title {
+    font-family: 'Newsreader', Georgia, serif;
+    font-size: 1.0625rem;
+    font-weight: 700;
+    color: var(--color-text);
+    line-height: 1.4;
+    display: block;
+    margin-bottom: 6px;
+  }
+  .amendment-title:hover {
+    color: var(--color-accent);
+  }
+  .amendment-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+  }
+  .amendment-source {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .amendment-date {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+  }
+  .amendment-count {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--color-accent);
+    background: var(--color-accent-bg, rgba(37, 99, 235, 0.08));
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+  }
+  .amendment-sectors {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .sector-pill {
+    font-size: 0.625rem;
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+    background: var(--color-bg-alt);
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-border-light);
+    font-weight: 500;
+  }
+  .sector-pill:hover {
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+
+  /* Timeline */
+  .amendment-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    border-left: 2px solid var(--color-border);
+    padding-left: 16px;
+    margin-left: 4px;
+  }
+
+  .amendment-change {
+    position: relative;
+  }
+  .amendment-change::before {
+    content: '';
+    position: absolute;
+    left: -21px;
+    top: 6px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-accent);
+    border: 2px solid var(--color-bg-white);
+  }
+
+  .change-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+  }
+  .change-field {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-text);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .change-date {
+    font-size: 0.6875rem;
+    color: var(--color-text-dim);
+  }
+  .change-source {
+    font-size: 0.6875rem;
+    color: var(--color-text-dim);
+    font-style: italic;
+  }
+
+  /* Diff display */
+  .change-diff {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .diff-old, .diff-new {
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    padding: 8px 12px;
+    border-radius: var(--radius-md);
+    overflow-wrap: break-word;
+  }
+  .diff-old {
+    background: rgba(220, 38, 38, 0.06);
+    border: 1px solid rgba(220, 38, 38, 0.15);
+  }
+  .diff-old del {
+    color: #b91c1c;
+    text-decoration: line-through;
+    text-decoration-color: rgba(220, 38, 38, 0.4);
+  }
+  .diff-new {
+    background: rgba(22, 163, 74, 0.06);
+    border: 1px solid rgba(22, 163, 74, 0.15);
+  }
+  .diff-new ins {
+    color: #15803d;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(22, 163, 74, 0.3);
+  }
+
+  [data-theme="dark"] .diff-old {
+    background: rgba(220, 38, 38, 0.1);
+    border-color: rgba(220, 38, 38, 0.2);
+  }
+  [data-theme="dark"] .diff-old del {
+    color: #fca5a5;
+  }
+  [data-theme="dark"] .diff-new {
+    background: rgba(22, 163, 74, 0.1);
+    border-color: rgba(22, 163, 74, 0.2);
+  }
+  [data-theme="dark"] .diff-new ins {
+    color: #86efac;
+  }
+
+  @media (max-width: 768px) {
+    .stats-row { flex-direction: column; }
+    .filter-bar { flex-direction: column; align-items: flex-start; }
+    .page-title { font-size: 1.375rem; }
+  }
+</style>

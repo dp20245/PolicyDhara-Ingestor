@@ -2,7 +2,8 @@
 import Base from '../../layouts/Base.astro';
 import PolicyCard from '../../components/PolicyCard.astro';
 import ShareBar from '../../components/ShareBar.astro';
-import { getAllPolicies, getRelatedPolicies, getMeta, getImpactForPolicy } from '../../lib/data';
+import { getAllPolicies, getRelatedPolicies, getMeta, getImpactForPolicy, getAmendmentsForPolicy } from '../../lib/data';
+import type { Amendment } from '../../lib/data';
 import { enrichPolicy } from '../../lib/enrich';
 
 export function getStaticPaths() {
@@ -18,6 +19,7 @@ const base = (import.meta.env.BASE_URL).replace(/\/?$/, '/');
 const meta = getMeta();
 const enrichment = enrichPolicy(policy.sectors, policy.type, policy.date);
 const impact = getImpactForPolicy(policy.title);
+const amendments = getAmendmentsForPolicy(policy.id);
 
 const SDG_NAMES: Record<number, string> = {
   1: 'No Poverty', 2: 'Zero Hunger', 3: 'Good Health', 4: 'Quality Education',
@@ -260,6 +262,32 @@ const spectrumPct = ((enrichment.politicalLean + 2) / 4) * 100; // maps -2..+2 t
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* ── Amendment History ────────────────────────────── */}
+      {amendments.length > 0 && (
+        <div class="amendment-history-section">
+          <h3>Amendment History</h3>
+          <p class="amendment-history-desc">{amendments.length} change{amendments.length !== 1 ? 's' : ''} recorded for this policy.</p>
+          <div class="amendment-history-timeline">
+            {amendments.map((a: Amendment) => (
+              <div class="ah-entry">
+                <div class="ah-dot"></div>
+                <div class="ah-content">
+                  <div class="ah-header">
+                    <span class="ah-field">{a.field === 'title' ? 'Title' : a.field === 'description' ? 'Description' : a.field === 'type' ? 'Type' : a.field === 'sectors' ? 'Sectors' : a.field}</span>
+                    <span class="ah-date">{formatDate(a.date)}</span>
+                    {a.source_id && <span class="ah-source">via {a.source_id}</span>}
+                  </div>
+                  <div class="ah-diff">
+                    <div class="ah-diff-old"><del>{a.old_value}</del></div>
+                    <div class="ah-diff-new"><ins>{a.new_value}</ins></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -675,6 +703,114 @@ const spectrumPct = ((enrichment.politicalLean + 2) / 4) * 100; // maps -2..+2 t
     min-width: 16px;
     text-align: center;
   }
+
+  /* ── Amendment History ────────────────────────── */
+  .amendment-history-section {
+    background: var(--color-bg-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    box-shadow: var(--shadow-card);
+    margin-bottom: var(--space-xl);
+  }
+  .amendment-history-section > h3 {
+    font-family: 'Newsreader', Georgia, serif;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: 4px;
+    padding-bottom: var(--space-sm);
+    border-bottom: 1px solid var(--color-border-light);
+  }
+  .amendment-history-desc {
+    font-size: 0.8125rem;
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-md);
+  }
+  .amendment-history-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    border-left: 2px solid var(--color-border);
+    padding-left: 18px;
+    margin-left: 6px;
+  }
+  .ah-entry {
+    position: relative;
+  }
+  .ah-dot {
+    position: absolute;
+    left: -23px;
+    top: 6px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-accent);
+    border: 2px solid var(--color-bg-white);
+  }
+  .ah-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+  }
+  .ah-field {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-text);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .ah-date {
+    font-size: 0.6875rem;
+    color: var(--color-text-dim);
+  }
+  .ah-source {
+    font-size: 0.6875rem;
+    color: var(--color-text-dim);
+    font-style: italic;
+  }
+  .ah-diff {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .ah-diff-old, .ah-diff-new {
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    padding: 8px 12px;
+    border-radius: var(--radius-md);
+    overflow-wrap: break-word;
+  }
+  .ah-diff-old {
+    background: rgba(220, 38, 38, 0.06);
+    border: 1px solid rgba(220, 38, 38, 0.15);
+  }
+  .ah-diff-old del {
+    color: #b91c1c;
+    text-decoration: line-through;
+    text-decoration-color: rgba(220, 38, 38, 0.4);
+  }
+  .ah-diff-new {
+    background: rgba(22, 163, 74, 0.06);
+    border: 1px solid rgba(22, 163, 74, 0.15);
+  }
+  .ah-diff-new ins {
+    color: #15803d;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(22, 163, 74, 0.3);
+  }
+  [data-theme="dark"] .ah-diff-old {
+    background: rgba(220, 38, 38, 0.1);
+    border-color: rgba(220, 38, 38, 0.2);
+  }
+  [data-theme="dark"] .ah-diff-old del { color: #fca5a5; }
+  [data-theme="dark"] .ah-diff-new {
+    background: rgba(22, 163, 74, 0.1);
+    border-color: rgba(22, 163, 74, 0.2);
+  }
+  [data-theme="dark"] .ah-diff-new ins { color: #86efac; }
 
   @media (max-width: 768px) {
     .detail-panels { grid-template-columns: 1fr; }

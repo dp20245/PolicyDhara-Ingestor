@@ -3,10 +3,12 @@
 Detects new policies added during the latest fetch cycle and sends
 a digest email via the Buttondown API (free tier).
 
-Usage: python3 scripts/send_newsletter.py [--draft]
+Usage: python3 scripts/send_newsletter.py [--draft] [--sector SLUG] [--sector-alerts]
 
 Requires BUTTONDOWN_API_KEY env var.
 Pass --draft to create a draft instead of sending immediately.
+Pass --sector SLUG to send an email filtered to a single sector.
+Pass --sector-alerts to send per-sector digest emails for all sectors with new policies.
 """
 
 import html as html_mod
@@ -64,10 +66,48 @@ def find_new_policies() -> list[dict]:
     return new_policies
 
 
-def format_email(policies: list[dict]) -> tuple[str, str]:
-    """Build email subject and HTML body from new policies."""
+def get_sector_slug(sector_name: str) -> str:
+    """Convert sector name to URL slug, matching the Astro getSectorSlug()."""
+    return sector_name.lower().replace(" & ", "-").replace(" ", "-")
+
+
+def filter_by_sector(policies: list[dict], sector_slug: str) -> list[dict]:
+    """Filter policies to only those belonging to the given sector slug."""
+    return [
+        p for p in policies
+        if sector_slug in [
+            get_sector_slug(s) for s in p.get("sectors", [])
+        ]
+    ]
+
+
+def get_sectors_with_new_policies(policies: list[dict]) -> dict[str, list[dict]]:
+    """Group new policies by sector. Returns {sector_name: [policies]}."""
+    by_sector: dict[str, list[dict]] = {}
+    for p in policies:
+        for s in p.get("sectors", ["Uncategorized"]):
+            by_sector.setdefault(s, []).append(p)
+    return by_sector
+
+
+def format_email(policies: list[dict], sector_filter: str | None = None) -> tuple[str, str]:
+    """Build email subject and HTML body from new policies.
+
+    If sector_filter is given (as a display name), only that sector's
+    policies are shown and the subject reflects the sector.
+    """
     today = datetime.now(timezone.utc).strftime("%B %d, %Y")
-    subject = f"PolicyDhara Brief — {len(policies)} new update{'s' if len(policies) != 1 else ''} ({today})"
+
+    if sector_filter:
+        subject = (
+            f"PolicyDhara {sector_filter} Alert — "
+            f"{len(policies)} new update{'s' if len(policies) != 1 else ''} ({today})"
+        )
+    else:
+        subject = (
+            f"PolicyDhara Brief — "
+            f"{len(policies)} new update{'s' if len(policies) != 1 else ''} ({today})"
+        )
 
     # Group by sector
     by_sector: dict[str, list[dict]] = {}
@@ -100,8 +140,12 @@ def format_email(policies: list[dict]) -> tuple[str, str]:
             rows += f'<tr><td style="padding:6px 0;line-height:1.4;">{title_html}{desc}</td>'
             rows += f'<td style="padding:6px 0;color:#6b7280;font-size:13px;white-space:nowrap;vertical-align:top;">{source}<br>{date}</td></tr>\n'
 
+    heading = f"PolicyDhara {sector_filter} Alert" if sector_filter else "PolicyDhara Daily Brief"
+    alerts_link = f'{SITE_URL}/alerts' if sector_filter else ''
+    alerts_bullet = f' &bull;\n    <a href="{alerts_link}" style="color:#1e40af;">Manage alerts</a>' if sector_filter else ''
+
     body = f"""<div style="font-family:-apple-system,system-ui,sans-serif;max-width:640px;margin:0 auto;color:#111827;">
-  <h2 style="color:#1e3a5f;margin-bottom:4px;">PolicyDhara Daily Brief</h2>
+  <h2 style="color:#1e3a5f;margin-bottom:4px;">{heading}</h2>
   <p style="color:#6b7280;margin-top:0;">{today} &mdash; {len(policies)} new policy update{'s' if len(policies) != 1 else ''} tracked</p>
 
   <table style="width:100%;border-collapse:collapse;font-size:14px;">
@@ -111,25 +155,34 @@ def format_email(policies: list[dict]) -> tuple[str, str]:
   <p style="margin-top:24px;padding-top:16px;border-top:1px solid #e5e7eb;font-size:13px;color:#6b7280;">
     <a href="{SITE_URL}" style="color:#1e40af;">Browse all policies</a> &bull;
     <a href="{SITE_URL}/digest" style="color:#1e40af;">Today's digest</a> &bull;
-    <a href="{SITE_URL}/rss.xml" style="color:#1e40af;">RSS feed</a>
+    <a href="{SITE_URL}/rss.xml" style="color:#1e40af;">RSS feed</a>{alerts_bullet}
   </p>
 </div>"""
 
     return subject, body
 
 
-def send_via_buttondown(subject: str, body: str, draft: bool = False):
-    """Create an email (or draft) via the Buttondown API."""
+def send_via_buttondown(subject: str, body: str, draft: bool = False,
+                        metadata: dict | None = None):
+    """Create an email (or draft) via the Buttondown API.
+
+    metadata can include sector tags for filtering, e.g.:
+        {"sectors": ["finance-economy", "health"]}
+    """
     api_key = os.environ.get("BUTTONDOWN_API_KEY", "")
     if not api_key:
         print("  ERROR: BUTTONDOWN_API_KEY not set — skipping email")
         sys.exit(1)
 
-    payload = json.dumps({
+    email_data: dict = {
         "subject": subject,
         "body": body,
         "status": "draft" if draft else "about_to_send",
-    }).encode()
+    }
+    if metadata:
+        email_data["metadata"] = metadata
+
+    payload = json.dumps(email_data).encode()
 
     req = Request(BUTTONDOWN_API, data=payload, method="POST")
     req.add_header("Authorization", f"Token {api_key}")
@@ -144,6 +197,35 @@ def send_via_buttondown(subject: str, body: str, draft: bool = False):
         error_body = e.read().decode() if e.fp else ""
         print(f"  ERROR ({e.code}): {error_body}")
         sys.exit(1)
+
+
+def send_sector_alerts(new_policies: list[dict], draft: bool = False):
+    """Send per-sector digest emails for each sector that has new policies.
+
+    Each sector email is tagged with metadata so Buttondown can filter
+    delivery to subscribers interested in that sector.
+    """
+    sectors_map = get_sectors_with_new_policies(new_policies)
+
+    if not sectors_map:
+        print("  No sectors with new policies for sector alerts")
+        return
+
+    print(f"  Sending sector alerts for {len(sectors_map)} sectors...")
+
+    for sector_name, sector_policies in sorted(sectors_map.items()):
+        slug = get_sector_slug(sector_name)
+        print(f"  -- {sector_name} ({slug}): {len(sector_policies)} policies")
+
+        subject, body = format_email(sector_policies, sector_filter=sector_name)
+        metadata = {
+            "sectors": [slug],
+            "sector_names": [sector_name],
+            "type": "sector_alert",
+        }
+        send_via_buttondown(subject, body, draft=draft, metadata=metadata)
+
+    print(f"  Sector alerts done: {len(sectors_map)} emails sent/drafted")
 
 
 def main():
@@ -166,13 +248,61 @@ def main():
         save_snapshot()
         return
 
+    # --sector SLUG: send a single sector-filtered email
+    if "--sector" in sys.argv:
+        idx = sys.argv.index("--sector")
+        if idx + 1 >= len(sys.argv):
+            print("  ERROR: --sector requires a sector slug argument")
+            sys.exit(1)
+        sector_slug = sys.argv[idx + 1]
+        filtered = filter_by_sector(new_policies, sector_slug)
+        if not filtered:
+            print(f"  No new policies in sector '{sector_slug}'")
+            save_snapshot()
+            return
+        # Find display name from first matching policy
+        sector_name = sector_slug
+        for p in filtered:
+            for s in p.get("sectors", []):
+                if get_sector_slug(s) == sector_slug:
+                    sector_name = s
+                    break
+            if sector_name != sector_slug:
+                break
+        subject, body = format_email(filtered, sector_filter=sector_name)
+        print(f"  Subject: {subject}")
+        metadata = {"sectors": [sector_slug], "type": "sector_alert"}
+        send_via_buttondown(subject, body, draft=draft, metadata=metadata)
+        save_snapshot()
+        print("  Done!")
+        return
+
+    # --sector-alerts: send per-sector digests for all sectors with new policies
+    if "--sector-alerts" in sys.argv:
+        send_sector_alerts(new_policies, draft=draft)
+        save_snapshot()
+        print("  Done!")
+        return
+
+    # Default: send the full digest
+    # Collect sector slugs that have new policies for metadata tagging
+    all_sector_slugs = list({
+        get_sector_slug(s)
+        for p in new_policies
+        for s in p.get("sectors", [])
+    })
+
     subject, body = format_email(new_policies)
     print(f"  Subject: {subject}")
 
     mode = "draft" if draft else "send"
     print(f"  Mode: {mode}")
 
-    send_via_buttondown(subject, body, draft=draft)
+    metadata = {
+        "sectors": all_sector_slugs,
+        "type": "daily_digest",
+    }
+    send_via_buttondown(subject, body, draft=draft, metadata=metadata)
 
     # Update snapshot after successful send
     save_snapshot()

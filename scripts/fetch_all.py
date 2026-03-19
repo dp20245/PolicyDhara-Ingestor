@@ -259,8 +259,122 @@ def load_existing_policies() -> dict:
     return existing
 
 
+AMENDMENTS_FILE = DATA_DIR / "amendments.json"
+
+# Fields to track for amendment detection
+_AMENDMENT_FIELDS = ("title", "description", "type")
+
+
+def _normalize_for_compare(text: str) -> str:
+    """Normalize text for comparison (collapse whitespace, lowercase)."""
+    return re.sub(r'\s+', ' ', text.strip().lower())
+
+
+def _title_similarity(a: str, b: str) -> float:
+    """Fuzzy title similarity (mirrors titleSimilarity in data.ts)."""
+    stop = {"the", "a", "an", "of", "for", "and", "in", "on", "to", "with", "by", "from"}
+    def words(t):
+        return {w for w in re.sub(r'[^a-z0-9 ]', '', t.lower()).split() if len(w) > 3 and w not in stop}
+    wa, wb = words(a), words(b)
+    if not wa or not wb:
+        return 0.0
+    overlap = len(wa & wb)
+    return overlap / min(len(wa), len(wb))
+
+
+def load_amendments() -> dict:
+    """Load existing amendment history."""
+    if AMENDMENTS_FILE.exists():
+        try:
+            with open(AMENDMENTS_FILE) as f:
+                return json.load(f)
+        except (json.JSONDecodeError, IOError):
+            pass
+    return {}
+
+
+def save_amendments(amendments: dict):
+    """Persist amendment history to disk."""
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    with open(AMENDMENTS_FILE, "w") as f:
+        json.dump(amendments, f, indent=2, ensure_ascii=False)
+
+
+def detect_amendments(existing: dict, new_items: list[dict], amendments: dict) -> dict:
+    """Detect changes when a policy ID reappears with different content.
+
+    Also uses fuzzy title matching to find near-duplicate policies that
+    represent amendments to each other (different IDs, similar titles).
+    """
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+    # --- Exact ID match: same policy updated ---
+    for item in new_items:
+        pid = item["id"]
+        if pid not in existing:
+            continue
+        old = existing[pid]
+        for field in _AMENDMENT_FIELDS:
+            old_val = old.get(field, "")
+            new_val = item.get(field, "")
+            if _normalize_for_compare(old_val) != _normalize_for_compare(new_val) and old_val and new_val:
+                amendments.setdefault(pid, []).append({
+                    "date": today,
+                    "field": field,
+                    "old_value": old_val,
+                    "new_value": new_val,
+                    "source_id": item.get("source_id", ""),
+                })
+        # Check sectors change
+        old_sectors = sorted(old.get("sectors", []))
+        new_sectors = sorted(item.get("sectors", []))
+        if old_sectors != new_sectors and old_sectors and new_sectors:
+            amendments.setdefault(pid, []).append({
+                "date": today,
+                "field": "sectors",
+                "old_value": ", ".join(old_sectors),
+                "new_value": ", ".join(new_sectors),
+                "source_id": item.get("source_id", ""),
+            })
+
+    # --- Fuzzy title matching: near-duplicate policies across sources ---
+    existing_list = list(existing.values())
+    for item in new_items:
+        if item["id"] in existing:
+            continue  # already handled above
+        for old in existing_list:
+            if old["id"] == item["id"]:
+                continue
+            sim = _title_similarity(item.get("title", ""), old.get("title", ""))
+            if sim >= 0.7:
+                # High similarity — treat as an amendment/update to the older policy
+                old_desc = old.get("description", "")
+                new_desc = item.get("description", "")
+                if old_desc and new_desc and _normalize_for_compare(old_desc) != _normalize_for_compare(new_desc):
+                    amendments.setdefault(old["id"], []).append({
+                        "date": today,
+                        "field": "description",
+                        "old_value": old_desc,
+                        "new_value": new_desc,
+                        "source_id": item.get("source_id", ""),
+                    })
+                break  # one match per new item
+
+    return amendments
+
+
 def merge_policies(existing: dict, new_items: list[dict]) -> list[dict]:
-    """Merge new items with existing, deduplicating by ID, source+title, and title across sources."""
+    """Merge new items with existing, deduplicating by ID, source+title, and title across sources.
+    Also detects amendments when a policy reappears with changed text."""
+
+    # --- Amendment detection (before overwriting) ---
+    amendments = load_amendments()
+    amendments = detect_amendments(existing, new_items, amendments)
+    save_amendments(amendments)
+    amended_count = sum(1 for v in amendments.values() if v)
+    if amended_count:
+        print(f"  Amendment tracking: {amended_count} policies with recorded changes")
+
     for item in new_items:
         existing[item["id"]] = item
 
