@@ -1,149 +1,151 @@
 # PolicyDhara
 
-Auto-updating tracker of Indian development policies across 22 sectors. Fetches from 20+ official and institutional sources every 6 hours via GitHub Actions, classifies by sector, and publishes a static site with search, analytics, and email digests.
+[![Website](https://img.shields.io/badge/Website-varnasr.github.io%2FPolicyDhara-blue)](https://varnasr.github.io/PolicyDhara)
+[![License: MIT](https://img.shields.io/badge/Code-MIT-green.svg)](LICENSE)
+[![GitHub Actions](https://img.shields.io/badge/Auto--Update-Every%206%20Hours-brightgreen?logo=github-actions)](https://github.com/Varnasr/PolicyDhara/actions)
+[![GitHub Last Commit](https://img.shields.io/github/last-commit/Varnasr/PolicyDhara)](https://github.com/Varnasr/PolicyDhara/commits/master)
+[![Part of ImpactMojo](https://img.shields.io/badge/Part%20of-ImpactMojo-orange)](https://www.impactmojo.in)
 
-**Live site:** [varnasr.github.io/PolicyDhara](https://varnasr.github.io/PolicyDhara)
+**Auto-updating tracker of Indian development policies across 22 sectors — fetching from 20+ official sources every 6 hours via GitHub Actions.**
 
-## What it tracks
+A complement to [impactmojo.in](https://impactmojo.in) and the [OpenStacks for Change](https://github.com/Varnasr/OpenStacks-for-Change) ecosystem.
+
+**Live at [varnasr.github.io/PolicyDhara](https://varnasr.github.io/PolicyDhara)**
+
+---
+
+## About
+
+PolicyDhara (पॉलिसीधारा — "Policy Stream") provides a living, searchable archive of Indian development policy. It aggregates policy documents, schemes, legislation, budget allocations, and analysis from official government portals and research institutions — automatically refreshed every 6 hours.
+
+It is designed for researchers, journalists, advocates, and practitioners who need to track policy developments across India's complex governance landscape without manually monitoring dozens of government portals.
+
+---
+
+## What It Tracks
 
 - Central and state government policies, schemes, and legislation
-- Union Budget allocations and fiscal policy
-- Parliament bills, sessions, and productivity
-- Notifications, gazettes, circulars, and orders
-- Research and analysis from think tanks and international bodies
+- Union Budget allocations and fiscal policy statements
+- Parliament bills, session data, and legislative productivity
+- Notifications, gazette circulars, and executive orders
+- Think tank analysis and international development body reports
 
-**22 sectors** including Education, Health, Agriculture, Climate, Defence, Digital, Finance, Infrastructure, and more.
+---
 
-**Sources include** PIB, PRS Legislative Research, India Code, eGazette, NITI Aayog, RBI, Supreme Court, ORF, CPR, ICRIER, World Bank, UNDP, and others.
+## 22 Sectors Covered
 
-## How it works
+| Cluster | Sectors |
+|---------|---------|
+| **Social** | Education, Health, Gender, Social Protection, Nutrition |
+| **Economy** | Finance, Agriculture, Labour, Infrastructure, Digital |
+| **Environment** | Climate, Water, Energy, Environment |
+| **Governance** | Democracy, Legal, Defence, Urban, Rural |
+| **International** | Trade, Foreign Policy, Development Cooperation |
+
+---
+
+## Data Sources (20+)
+
+| Source | Type |
+|--------|------|
+| [PIB (Press Information Bureau)](https://pib.gov.in) | Government press releases |
+| [PRS Legislative Research](https://prsindia.org) | Bills, acts, and parliament analysis |
+| [India Code](https://indiacode.nic.in) | Legislation database |
+| [eGazette of India](https://egazette.nic.in) | Official gazette notifications |
+| [NITI Aayog](https://niti.gov.in) | Policy reports and flagship scheme updates |
+| [RBI](https://rbi.org.in) | Monetary policy, financial sector regulation |
+| [Supreme Court of India](https://sci.gov.in) | Landmark judgements |
+| [ORF](https://orfonline.org) | Strategic policy analysis |
+| [CPR India](https://cprindia.org) | Governance and accountability research |
+| [ICRIER](https://icrier.org) | Trade, investment, and economic policy |
+| [World Bank India](https://worldbank.org/en/country/india) | Development policy assessments |
+| [UNDP India](https://undp.org/india) | SDG and human development updates |
+
+---
+
+## Architecture
 
 ```
-feeds.json          20+ source configs (RSS + scrape)
-    │
-    ▼
-scripts/fetch_all.py    Fetch → Classify → Deduplicate → Write JSON
-    │
-    ▼
-data/policies.json      2,000 policies (capped, newest first)
-    │
-    ▼
-Astro build             Static site with search, sectors, states, digest
-    │
-    ▼
-GitHub Pages            Deployed automatically
-    │
-    ▼
-Buttondown API          Email digest when new policies are found
+┌──────────────────────────────────────────────────────┐
+│              GitHub Actions (every 6 hours)           │
+│                                                        │
+│  update-policies.yml                                   │
+│  ├── Fetch from 20+ sources (RSS, APIs, scrape)       │
+│  ├── Classify by sector (22 categories)               │
+│  ├── Deduplicate and score relevance                  │
+│  ├── Commit updated data to repository                │
+│  └── Trigger GitHub Pages rebuild                     │
+└──────────────────────────────────────────────────────┘
+                         │
+              GitHub Pages (static hosting)
+                         │
+┌──────────────────────────────────────────────────────┐
+│              varnasr.github.io/PolicyDhara            │
+│  ├── Searchable policy database                       │
+│  ├── Sector filters (22 categories)                   │
+│  ├── Source attribution for every entry               │
+│  └── Email digest for subscribers                     │
+└──────────────────────────────────────────────────────┘
 ```
 
-The pipeline runs every 6 hours via GitHub Actions. No server, no database — just JSON files and a static site.
+---
 
-## Local development
+## Automation Schedule
+
+| Task | Frequency | Mechanism |
+|------|-----------|-----------|
+| Policy data refresh | Every 6 hours | `update-policies.yml` (GitHub Actions) |
+| Site deploy | On data commit | `deploy.yml` (GitHub Pages) |
+| PyPI package publish | On release | `publish-pypi.yml` |
+
+---
+
+## Local Development
 
 ```bash
-# Install dependencies
-npm install
-pip install -r scripts/requirements.txt
+git clone https://github.com/Varnasr/PolicyDhara.git
+cd PolicyDhara
 
-# Fetch latest policy data
-npm run fetch
+# Install dependencies (Python)
+pip install -r requirements.txt
 
-# Start dev server
-npm run dev
+# Run a manual policy fetch
+python fetch_policies.py
 
-# Build for production
-npm run build
+# Serve the static site locally
+python3 -m http.server 8000
 ```
 
-## Project structure
+---
 
-```
-├── .github/workflows/
-│   ├── update-policies.yml   # Cron: fetch → build → deploy → email
-│   └── deploy.yml            # Deploy on push to master
-├── scripts/
-│   ├── fetch_all.py          # Main data pipeline
-│   ├── fetch_rss.py          # RSS source fetcher
-│   ├── fetch_scrape.py       # HTML scraper (BeautifulSoup)
-│   ├── classifier.py         # Keyword-based sector classification
-│   ├── send_newsletter.py    # Buttondown API email digest
-│   └── requirements.txt
-├── src/
-│   ├── components/           # Astro components
-│   ├── pages/                # Routes (sectors, states, digest, search, etc.)
-│   ├── layouts/              # Base layout
-│   └── lib/data.ts           # Data loading and analytics
-├── data/                     # Generated JSON (auto-committed by CI)
-├── feeds.json                # Source configuration
-└── astro.config.mjs
-```
+## Tech Stack
 
-## Features
+| Layer | Technology | Purpose |
+|-------|-----------|---------|
+| Data Pipeline | Python | Fetching, classifying, and deduplicating policy data |
+| Automation | GitHub Actions | Scheduled data refresh (6-hourly) and deploy |
+| Frontend | Vanilla HTML / CSS / JS | Static searchable site |
+| Hosting | GitHub Pages | Auto-deploy from repository |
+| Package | PyPI | Python package for the policy data pipeline |
 
-- **Search** — full-text search across all policies
-- **Sectors** — 22 sector pages with trend analysis and insights
-- **States** — per-state policy profiles and GSDP data
-- **Parliament** — bill tracking, session productivity, legislative trends
-- **Budget** — ministry allocations and fiscal summaries
-- **Digest** — daily policy summary
-- **Continuity** — policy evolution across government eras (UPA I → NDA III)
-- **RSS** — feed of the 100 latest policies
-- **Email digest** — automated via Buttondown when new policies are tracked
-- **API** — JSON data endpoints for programmatic access
+---
 
-## Configuration
+## Related Repositories
 
-### Adding a data source
+- [ImpactMojo](https://github.com/Varnasr/ImpactMojo) — Main platform (PolicyDhara is embedded)
+- [PolicyStack](https://github.com/Varnasr/PolicyStack) — OpenStacks policy data layer
+- [INDIA-DATA](https://github.com/Varnasr/INDIA-DATA) — Bihar electoral data analysis
+- [someperspective](https://github.com/Varnasr/someperspective) — India's political economy analysis
 
-Add an entry to `feeds.json`:
-
-```json
-{
-  "source_id": {
-    "name": "Source Name",
-    "short_name": "Short",
-    "type": "rss",
-    "url": "https://example.com/feed.xml",
-    "level": "central",
-    "covers_sectors": "all"
-  }
-}
-```
-
-Supported types: `rss`, `scrape`, `api`.
-
-### Email digest (Buttondown)
-
-The GitHub Action creates a draft email via Buttondown's free API whenever new policies are detected.
-
-**Setup:**
-1. Get your API key from [buttondown.com/settings/programming](https://buttondown.com/settings/programming)
-2. Add it as a GitHub secret: **Settings → Secrets → Actions → `BUTTONDOWN_API_KEY`**
-
-To auto-send instead of drafting, remove `--draft` from the workflow step.
-
-## Tech stack
-
-- **Site:** [Astro](https://astro.build) 4.x (static)
-- **Data pipeline:** Python 3.12 (requests, BeautifulSoup, lxml)
-- **CI/CD:** GitHub Actions
-- **Hosting:** GitHub Pages
-- **Email:** [Buttondown](https://buttondown.com) (free tier)
-
-## Contributing
-
-Contributions welcome — especially:
-
-- New data sources (state governments, historical archives, sector-specific feeds)
-- Classification improvements (the keyword matcher in `scripts/classifier.py`)
-- Historical policy data (pre-2014 is underrepresented due to limited digital archives)
-- Bug reports and UI improvements
-
-Open an issue or submit a pull request.
+---
 
 ## License
 
-MIT License. See [LICENSE](LICENSE).
+MIT License — see [LICENSE](LICENSE) for details.
 
-Built by [ImpactMojo](https://www.impactmojo.in).
+---
+
+## Contact
+
+- **Platform:** [impactmojo.in](https://www.impactmojo.in)
+- **GitHub:** [github.com/Varnasr](https://github.com/Varnasr)
