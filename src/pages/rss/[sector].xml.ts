@@ -1,6 +1,7 @@
 import rss from '@astrojs/rss';
 import type { APIContext, GetStaticPaths } from 'astro';
 import { getAllPolicies, getMeta, getSectorSlug } from '../../lib/data';
+import { renderPolicyHtml } from '../../lib/rss-content';
 
 export const getStaticPaths: GetStaticPaths = () => {
   const meta = getMeta();
@@ -29,6 +30,7 @@ export function GET(context: APIContext & { props: { sectorName: string } }) {
       link: p.link || `https://varnasr.github.io/PolicyDhara/`,
       pubDate: new Date(p.date),
       categories: p.sectors,
+      content: renderPolicyHtml(p),
       customData: `<source>${p.source_short}</source><type>${p.type}</type>`,
     })),
     customData: `<language>en-in</language>`,

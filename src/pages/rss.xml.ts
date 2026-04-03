@@ -1,6 +1,7 @@
 import rss from '@astrojs/rss';
 import type { APIContext } from 'astro';
 import { getAllPolicies } from '../lib/data';
+import { renderPolicyHtml } from '../lib/rss-content';
 
 export function GET(context: APIContext) {
   const policies = getAllPolicies();
@@ -15,6 +16,7 @@ export function GET(context: APIContext) {
       link: p.link || `https://varnasr.github.io/PolicyDhara/`,
       pubDate: new Date(p.date),
       categories: p.sectors,
+      content: renderPolicyHtml(p),
       customData: `<source>${p.source_short}</source><type>${p.type}</type>`,
     })),
     customData: `<language>en-in</language>`,
