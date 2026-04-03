@@ -90,24 +90,48 @@ def get_sectors_with_new_policies(policies: list[dict]) -> dict[str, list[dict]]
     return by_sector
 
 
+def _policy_type_color(policy_type: str) -> str:
+    """Return an inline color for a policy type badge."""
+    colors = {
+        "legislation": "#dc2626",
+        "notification": "#d97706",
+        "scheme": "#16a34a",
+        "budget": "#ea580c",
+        "research": "#7c3aed",
+        "announcement": "#2563eb",
+        "policy": "#9333ea",
+    }
+    return colors.get(policy_type.lower(), "#4a4a48")
+
+
+def _policy_type_bg(policy_type: str) -> str:
+    """Return a background color for a policy type badge."""
+    bgs = {
+        "legislation": "#fef2f2",
+        "notification": "#fffbeb",
+        "scheme": "#f0fdf4",
+        "budget": "#fff7ed",
+        "research": "#f5f3ff",
+        "announcement": "#eff6ff",
+        "policy": "#faf5ff",
+    }
+    return bgs.get(policy_type.lower(), "#f7f6f3")
+
+
 def format_email(policies: list[dict], sector_filter: str | None = None) -> tuple[str, str]:
     """Build email subject and HTML body from new policies.
 
     If sector_filter is given (as a display name), only that sector's
     policies are shown and the subject reflects the sector.
     """
-    today = datetime.now(timezone.utc).strftime("%B %d, %Y")
+    today = datetime.now(timezone.utc).strftime("%B %-d, %Y")
+    count = len(policies)
+    plural = "s" if count != 1 else ""
 
     if sector_filter:
-        subject = (
-            f"PolicyDhara {sector_filter} Alert — "
-            f"{len(policies)} new update{'s' if len(policies) != 1 else ''} ({today})"
-        )
+        subject = f"PolicyDhara {sector_filter} Alert — {count} new update{plural} ({today})"
     else:
-        subject = (
-            f"PolicyDhara Brief — "
-            f"{len(policies)} new update{'s' if len(policies) != 1 else ''} ({today})"
-        )
+        subject = f"PolicyDhara Brief — {count} new update{plural} ({today})"
 
     # Group by sector
     by_sector: dict[str, list[dict]] = {}
@@ -116,48 +140,124 @@ def format_email(policies: list[dict], sector_filter: str | None = None) -> tupl
         for s in sectors:
             by_sector.setdefault(s, []).append(p)
 
-    rows = ""
+    # Build sector blocks
+    sector_blocks = ""
     for sector in sorted(by_sector.keys()):
         items = by_sector[sector]
         sector_safe = html_mod.escape(sector)
-        rows += f'<tr><td colspan="2" style="padding:12px 0 4px;font-weight:bold;'
-        rows += f'color:#1e40af;border-bottom:1px solid #e5e7eb;">{sector_safe}</td></tr>\n'
+        sector_slug = get_sector_slug(sector)
+        sector_url = f"{SITE_URL}/sectors/{sector_slug}"
+
+        sector_blocks += f'''
+        <tr><td style="padding:0;">
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+            <tr><td style="padding:24px 0 8px 0;">
+              <a href="{sector_url}" style="font-family:'Georgia','Newsreader',serif;font-size:16px;font-weight:600;color:#1a1a18;text-decoration:none;letter-spacing:-0.01em;">{sector_safe}</a>
+              <span style="display:inline-block;margin-left:8px;font-size:11px;color:#7a7a78;font-family:-apple-system,'DM Sans',system-ui,sans-serif;">{len(items)} update{("s" if len(items) != 1 else "")}</span>
+            </td></tr>
+            <tr><td style="padding:0;"><div style="height:2px;background:#16a34a;width:40px;border-radius:1px;"></div></td></tr>
+          </table>
+        </td></tr>'''
+
         for p in items:
             title = html_mod.escape(p.get("title", "Untitled"))
             link = p.get("link", "")
             source = html_mod.escape(p.get("source_short", p.get("source_name", "")))
             date = html_mod.escape(p.get("date", ""))
-            desc = html_mod.escape(p.get("description", "")[:150])
-            if desc:
-                desc = f'<br><span style="color:#6b7280;font-size:13px;">{desc}...</span>'
+            desc_raw = p.get("description", "")[:180]
+            desc = html_mod.escape(desc_raw)
+            policy_type = p.get("type", "policy")
+            type_color = _policy_type_color(policy_type)
+            type_bg = _policy_type_bg(policy_type)
+            type_label = html_mod.escape(policy_type.replace("_", " ").title())
 
-            # Only allow http/https links — reject javascript:, data:, etc.
+            # Only allow http/https links
             if link and re.match(r'^https?://', link):
                 link_safe = html_mod.escape(link)
-                title_html = f'<a href="{link_safe}" style="color:#111827;text-decoration:none;">{title}</a>'
+                title_html = f'<a href="{link_safe}" style="color:#1a1a18;text-decoration:none;font-weight:500;">{title}</a>'
             else:
-                title_html = title
-            rows += f'<tr><td style="padding:6px 0;line-height:1.4;">{title_html}{desc}</td>'
-            rows += f'<td style="padding:6px 0;color:#6b7280;font-size:13px;white-space:nowrap;vertical-align:top;">{source}<br>{date}</td></tr>\n'
+                title_html = f'<span style="font-weight:500;color:#1a1a18;">{title}</span>'
 
-    heading = f"PolicyDhara {sector_filter} Alert" if sector_filter else "PolicyDhara Daily Brief"
-    alerts_link = f'{SITE_URL}/alerts' if sector_filter else ''
-    alerts_bullet = f' &bull;\n    <a href="{alerts_link}" style="color:#1e40af;">Manage alerts</a>' if sector_filter else ''
+            desc_html = ""
+            if desc:
+                desc_html = f'<p style="margin:4px 0 0;font-size:13px;line-height:1.45;color:#4a4a48;">{desc}{"..." if len(desc_raw) >= 180 else ""}</p>'
 
-    body = f"""<div style="font-family:-apple-system,system-ui,sans-serif;max-width:640px;margin:0 auto;color:#111827;">
-  <h2 style="color:#1e3a5f;margin-bottom:4px;">{heading}</h2>
-  <p style="color:#6b7280;margin-top:0;">{today} &mdash; {len(policies)} new policy update{'s' if len(policies) != 1 else ''} tracked</p>
+            sector_blocks += f'''
+        <tr><td style="padding:0;">
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+            <tr><td style="padding:10px 12px;border-bottom:1px solid #f0ede6;">
+              <div style="margin-bottom:5px;">
+                <span style="display:inline-block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:{type_color};background:{type_bg};padding:2px 7px;border-radius:3px;">{type_label}</span>
+                <span style="font-size:12px;color:#a0a09e;margin-left:6px;">{source} &middot; {date}</span>
+              </div>
+              <div style="font-size:14px;line-height:1.4;">{title_html}</div>
+              {desc_html}
+            </td></tr>
+          </table>
+        </td></tr>'''
 
-  <table style="width:100%;border-collapse:collapse;font-size:14px;">
-    {rows}
-  </table>
+    heading = f"PolicyDhara {html_mod.escape(sector_filter)} Alert" if sector_filter else "PolicyDhara Daily Brief"
+    subtitle = f"{count} new policy update{plural} tracked across India"
+    alerts_link_html = ""
+    if sector_filter:
+        alerts_link_html = f'<a href="{SITE_URL}/alerts" style="color:#16a34a;text-decoration:none;font-weight:500;">Manage alerts</a> &nbsp;&middot;&nbsp; '
 
-  <p style="margin-top:24px;padding-top:16px;border-top:1px solid #e5e7eb;font-size:13px;color:#6b7280;">
-    <a href="{SITE_URL}" style="color:#1e40af;">Browse all policies</a> &bull;
-    <a href="{SITE_URL}/digest" style="color:#1e40af;">Today's digest</a> &bull;
-    <a href="{SITE_URL}/rss.xml" style="color:#1e40af;">RSS feed</a>{alerts_bullet}
-  </p>
-</div>"""
+    body = f'''<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background-color:#f7f6f3;font-family:-apple-system,'DM Sans','Segoe UI',system-ui,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f7f6f3;">
+  <tr><td align="center" style="padding:24px 16px;">
+    <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;border-collapse:collapse;">
+
+      <!-- Header -->
+      <tr><td style="padding:28px 32px 24px;background:#fffef9;border-radius:12px 12px 0 0;border-bottom:2px solid #16a34a;">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+          <tr>
+            <td>
+              <div style="font-family:'Georgia','Newsreader',serif;font-size:22px;font-weight:700;color:#1a1a18;letter-spacing:-0.02em;margin-bottom:2px;">{heading}</div>
+              <div style="font-size:13px;color:#7a7a78;margin-top:4px;">{today}</div>
+            </td>
+            <td align="right" valign="top">
+              <a href="{SITE_URL}" style="text-decoration:none;">
+                <div style="display:inline-block;background:#16a34a;color:#ffffff;font-size:11px;font-weight:600;padding:6px 14px;border-radius:100px;letter-spacing:0.02em;">BROWSE ALL</div>
+              </a>
+            </td>
+          </tr>
+        </table>
+      </td></tr>
+
+      <!-- Summary bar -->
+      <tr><td style="padding:14px 32px;background:#f0fdf4;font-size:13px;color:#15803d;font-weight:500;">
+        {subtitle}
+      </td></tr>
+
+      <!-- Policy content -->
+      <tr><td style="padding:0 32px 16px;background:#fffef9;">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+          {sector_blocks}
+        </table>
+      </td></tr>
+
+      <!-- Footer -->
+      <tr><td style="padding:20px 32px 24px;background:#fffef9;border-top:1px solid #e5e2db;border-radius:0 0 12px 12px;">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+          <tr><td style="font-size:13px;color:#7a7a78;line-height:1.6;">
+            {alerts_link_html}<a href="{SITE_URL}/digest" style="color:#16a34a;text-decoration:none;font-weight:500;">Today&#8217;s digest</a> &nbsp;&middot;&nbsp;
+            <a href="{SITE_URL}/rss.xml" style="color:#16a34a;text-decoration:none;font-weight:500;">RSS feed</a> &nbsp;&middot;&nbsp;
+            <a href="{SITE_URL}/alerts" style="color:#16a34a;text-decoration:none;font-weight:500;">Sector alerts</a>
+          </td></tr>
+          <tr><td style="padding-top:14px;font-size:11px;color:#a0a09e;">
+            PolicyDhara by <a href="https://impactmojo.in" style="color:#a0a09e;">ImpactMojo</a> &mdash; Tracking 300+ official sources across India.
+          </td></tr>
+        </table>
+      </td></tr>
+
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>'''
 
     return subject, body
 
