@@ -47,6 +47,9 @@ jobs:
           test -f dist/index.html
           test -f dist/rss.xml
           test -d dist/policies
+          test -f dist/sitemap-index.xml
+          test -f dist/api/policies.json
+          test -d dist/_pagefind
           echo "Pages built: $(find dist -name '*.html' | wc -l)"
 
       - name: Upload artifact for GitHub Pages

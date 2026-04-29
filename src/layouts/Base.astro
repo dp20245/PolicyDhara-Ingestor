@@ -1,17 +1,21 @@
 ---
 import '../styles/global.css';
 import NewsTicker from '../components/NewsTicker.astro';
+import { ClientRouter } from 'astro:transitions';
 
 interface Props {
   title: string;
   description?: string;
+  ogImage?: string;
 }
 
-const { title, description = "PolicyDhara — open-source tracker of Indian development policies across 20+ sectors. By ImpactMojo." } = Astro.props;
+const { title, description = "PolicyDhara — open-source tracker of Indian development policies across 20+ sectors. By ImpactMojo.", ogImage } = Astro.props;
 const siteTitle = `${title} | PolicyDhara`;
 const rawBase = import.meta.env.BASE_URL;
 const base = rawBase.endsWith('/') ? rawBase : rawBase + '/';
 const canonicalUrl = Astro.url.href;
+const siteOrigin = Astro.site?.toString().replace(/\/$/, '') || 'https://varnasr.github.io';
+const ogImageUrl = ogImage || `${siteOrigin}${base}og-image.png`;
 ---
 <!DOCTYPE html>
 <html lang="en">
@@ -29,11 +33,16 @@ const canonicalUrl = Astro.url.href;
   <meta property="og:site_name" content="PolicyDhara" />
   <meta property="og:url" content={canonicalUrl} />
   <meta property="og:locale" content="en_IN" />
+  <meta property="og:image" content={ogImageUrl} />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="628" />
+  <meta property="og:image:alt" content="PolicyDhara — Indian development policy tracker" />
 
   {/* Twitter / X Card */}
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content={siteTitle} />
   <meta name="twitter:description" content={description} />
+  <meta name="twitter:image" content={ogImageUrl} />
 
   {/* Additional SEO */}
   <meta name="robots" content="index, follow" />
@@ -41,11 +50,26 @@ const canonicalUrl = Astro.url.href;
   <meta name="author" content="ImpactMojo" />
   <meta name="keywords" content="India policy tracker, Indian government policies, development policy, PIB, legislation, schemes, budget, parliament, open data, policy analysis" />
 
+  {/* Font loading: preconnect + non-blocking stylesheet, font-display: swap */}
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Newsreader:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link
+    rel="preload"
+    as="style"
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Newsreader:wght@400;600;700&display=swap"
+  />
+  <link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Newsreader:wght@400;600;700&display=swap"
+    media="print"
+    onload="this.media='all'"
+  />
+  <noscript>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Newsreader:wght@400;600;700&display=swap" rel="stylesheet" />
+  </noscript>
 
   <link rel="alternate" type="application/rss+xml" title="PolicyDhara RSS" href={`${base}rss.xml`} />
+  <link rel="sitemap" type="application/xml" href={`${base}sitemap-index.xml`} />
 
   {/* JSON-LD Structured Data */}
   <script type="application/ld+json" set:html={JSON.stringify({
@@ -65,6 +89,8 @@ const canonicalUrl = Astro.url.href;
       "query-input": "required name=search_term_string"
     }
   })} />
+
+  <ClientRouter />
 </head>
 <body>
   <header class="site-header">

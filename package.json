@@ -6,14 +6,19 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
-    "build": "astro build",
+    "build": "astro build && pagefind --site dist --output-subdir _pagefind",
+    "build:astro": "astro build",
     "preview": "astro preview",
     "fetch": "python3 scripts/fetch_all.py",
-    "update": "python3 scripts/fetch_all.py && astro build",
+    "update": "python3 scripts/fetch_all.py && npm run build",
     "prepare": "git config core.hooksPath .githooks"
   },
   "dependencies": {
-    "astro": "^6.0.0",
-    "@astrojs/rss": "^4.0.17"
+    "@astrojs/rss": "^4.0.17",
+    "@astrojs/sitemap": "^3.7.2",
+    "astro": "^6.0.0"
+  },
+  "devDependencies": {
+    "pagefind": "^1.5.2"
   }
 }
