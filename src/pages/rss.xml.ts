@@ -3,17 +3,23 @@ import type { APIContext } from 'astro';
 import { getAllPolicies } from '../lib/data';
 import { renderPolicyHtml } from '../lib/rss-content';
 
+const SITE_URL = 'https://varnasr.github.io/PolicyDhara';
+
 export function GET(context: APIContext) {
   const policies = getAllPolicies();
+  const base = (import.meta.env.BASE_URL || '/').replace(/\/?$/, '/');
+  const siteRoot = context.site
+    ? new URL(base, context.site).toString().replace(/\/$/, '')
+    : SITE_URL;
 
   return rss({
     title: 'PolicyDhara',
     description: 'Auto-updating tracker of Indian development policies across 22 sectors — by ImpactMojo',
-    site: context.site?.toString() || 'https://varnasr.github.io/PolicyDhara',
+    site: siteRoot,
     items: policies.slice(0, 100).map(p => ({
       title: p.title,
       description: `[${p.sectors.join(', ')}] ${p.description}`,
-      link: p.link || `https://varnasr.github.io/PolicyDhara/`,
+      link: p.link || `${siteRoot}/policies/${p.id}/`,
       pubDate: new Date(p.date),
       categories: p.sectors,
       content: renderPolicyHtml(p),

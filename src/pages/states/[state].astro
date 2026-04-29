@@ -20,7 +20,7 @@ const base = rawBase.endsWith('/') ? rawBase : rawBase + '/';
 const statePolicies = getAllPolicies().filter(p => p.state === gov.name);
 
 // Also get central policies — those that apply nationwide
-const centralPolicies = getAllPolicies().filter(p => !p.state && !p.level || p.level === 'central');
+const centralPolicies = getAllPolicies().filter(p => !p.state && (!p.level || p.level === 'central'));
 
 // Sector breakdown for this state's policies
 const sectorCounts: Record<string, number> = {};

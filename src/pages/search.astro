@@ -56,7 +56,15 @@ const searchIndex = policies.map(p => ({
       </div>
     </div>
 
-    <div class="search-meta" id="search-meta"></div>
+    <div class="search-meta" id="search-meta">
+      <span class="search-mode-toggle">
+        <button class="search-mode-btn active" data-mode="fast" type="button" title="In-memory substring search across titles and descriptions">Fast filter</button>
+        <button class="search-mode-btn" data-mode="full" type="button" title="Full-text search across the entire policy detail pages, with ranking">Full-text</button>
+      </span>
+    </div>
+
+    {/* Full-text (Pagefind) results — populated by Pagefind UI when activated */}
+    <div id="pagefind-search" style="display:none;"></div>
 
     <div class="search-results" id="search-results"></div>
 
@@ -276,7 +284,106 @@ const searchIndex = policies.map(p => ({
     .search-select { width: 100%; }
     .sr-top { flex-direction: column; gap: 4px; }
   }
+
+  /* Search-mode toggle */
+  .search-mode-toggle {
+    display: inline-flex;
+    gap: 0;
+    margin-left: auto;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    overflow: hidden;
+  }
+  .search-mode-btn {
+    padding: 4px 10px;
+    background: transparent;
+    border: none;
+    font: inherit;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .search-mode-btn:hover { background: var(--color-bg-alt); }
+  .search-mode-btn.active {
+    background: var(--color-accent);
+    color: white;
+  }
+  #search-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
 </style>
+
+{/* Pagefind UI styles + script (loaded only on the search page) */}
+<link rel="stylesheet" href={`${base}_pagefind/pagefind-ui.css`} />
+
+<script define:vars={{ base }}>
+  // Lazy-init Pagefind UI on first switch to full-text mode
+  let pagefindInitialized = false;
+  async function initPagefind() {
+    if (pagefindInitialized) return;
+    pagefindInitialized = true;
+    try {
+      // @ts-ignore - dynamic import of static asset
+      const mod = await import(`${base}_pagefind/pagefind-ui.js`);
+      const PagefindUI = mod.PagefindUI || mod.default?.PagefindUI || window.PagefindUI;
+      if (!PagefindUI) {
+        // Fallback: load via <script> tag
+        await new Promise((resolve, reject) => {
+          const s = document.createElement('script');
+          s.src = `${base}_pagefind/pagefind-ui.js`;
+          s.onload = resolve;
+          s.onerror = reject;
+          document.head.appendChild(s);
+        });
+      }
+      const Ctor = window.PagefindUI || PagefindUI;
+      if (Ctor) {
+        new Ctor({
+          element: '#pagefind-search',
+          showSubResults: true,
+          showImages: false,
+          resetStyles: false,
+          translations: { placeholder: 'Search the full-text of every policy…' },
+        });
+      }
+    } catch (err) {
+      console.warn('Pagefind UI failed to load — falling back to fast filter', err);
+      const pf = document.getElementById('pagefind-search');
+      if (pf) pf.innerHTML = '<p style="padding: var(--space-md); color: var(--color-text-muted); font-size: 0.8125rem;">Full-text search unavailable. Using fast filter.</p>';
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const fastEl = document.getElementById('search-results');
+    const fullEl = document.getElementById('pagefind-search');
+    const initialEl = document.getElementById('search-initial');
+    const emptyEl = document.getElementById('search-empty');
+    const buttons = document.querySelectorAll('.search-mode-btn');
+    const fastFilters = document.querySelector('.search-filters');
+
+    function setMode(mode) {
+      buttons.forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+      if (mode === 'full') {
+        if (fastEl) fastEl.style.display = 'none';
+        if (initialEl) initialEl.style.display = 'none';
+        if (emptyEl) emptyEl.style.display = 'none';
+        if (fastFilters) fastFilters.style.opacity = '0.4';
+        if (fullEl) fullEl.style.display = '';
+        initPagefind();
+      } else {
+        if (fastEl) fastEl.style.display = '';
+        if (fullEl) fullEl.style.display = 'none';
+        if (fastFilters) fastFilters.style.opacity = '1';
+      }
+    }
+
+    buttons.forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+  });
+</script>
 
 <script define:vars={{ searchIndex, base }}>
   document.addEventListener('DOMContentLoaded', () => {
@@ -310,7 +417,7 @@ const searchIndex = policies.map(p => ({
     let timer;
     function onInputChange() {
       clearTimeout(timer);
-      timer = setTimeout(runSearch, 150);
+      timer = setTimeout(() => { runSearch(); syncUrl(); }, 150);
     }
 
     input.addEventListener('input', onInputChange);
@@ -319,6 +426,35 @@ const searchIndex = policies.map(p => ({
     typeFilter.addEventListener('change', onInputChange);
     fromFilter.addEventListener('change', onInputChange);
     toFilter.addEventListener('change', onInputChange);
+
+    // ── URL <-> filter state sync ──
+    function syncUrl() {
+      const params = new URLSearchParams();
+      if (input.value.trim()) params.set('q', input.value.trim());
+      if (sectorFilter.value) params.set('sector', sectorFilter.value);
+      if (sourceFilter.value) params.set('source', sourceFilter.value);
+      if (typeFilter.value) params.set('type', typeFilter.value);
+      if (fromFilter.value) params.set('from', fromFilter.value);
+      if (toFilter.value) params.set('to', toFilter.value);
+      const qs = params.toString();
+      const newUrl = qs ? `${location.pathname}?${qs}` : location.pathname;
+      history.replaceState(null, '', newUrl);
+    }
+
+    function loadFromUrl() {
+      const params = new URLSearchParams(location.search);
+      const q = params.get('q');
+      if (q) input.value = q;
+      const setIfPresent = (el, key) => { const v = params.get(key); if (v !== null) el.value = v; };
+      setIfPresent(sectorFilter, 'sector');
+      setIfPresent(sourceFilter, 'source');
+      setIfPresent(typeFilter, 'type');
+      setIfPresent(fromFilter, 'from');
+      setIfPresent(toFilter, 'to');
+      if (q || sectorFilter.value || sourceFilter.value || typeFilter.value || fromFilter.value || toFilter.value) {
+        runSearch();
+      }
+    }
 
     function escapeHtml(s) {
       return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -365,7 +501,7 @@ const searchIndex = policies.map(p => ({
       const results = searchIndex.filter(p => {
         // Text match
         if (terms.length > 0) {
-          const haystack = (p.t + ' ' + p.d + ' ' + p.sec.join(' ') + ' ' + p.src + ' ' + p.ty).toLowerCase();
+          const haystack = ((p.t || '') + ' ' + (p.d || '') + ' ' + (p.sec || []).join(' ') + ' ' + (p.src || '') + ' ' + (p.ty || '')).toLowerCase();
           if (!terms.every(t => haystack.includes(t))) return false;
         }
         // Filters
@@ -397,7 +533,7 @@ const searchIndex = policies.map(p => ({
             <div class="sr-title"><a href="${base}policies/${p.id}/">${highlight(p.t, terms)}</a></div>
             <span class="sr-date">${formatDate(p.dt)}</span>
           </div>
-          <div class="sr-desc">${highlight(p.d.length > 200 ? p.d.slice(0, 200) + '...' : p.d, terms)}</div>
+          <div class="sr-desc">${highlight((p.d || '').length > 200 ? (p.d || '').slice(0, 200) + '...' : (p.d || ''), terms)}</div>
           <div class="sr-tags">
             <span class="sr-tag sr-type">${escapeHtml(p.ty)}</span>
             <span class="sr-tag sr-source">${escapeHtml(p.src)}</span>
@@ -406,5 +542,8 @@ const searchIndex = policies.map(p => ({
         </div>
       `).join('') + (results.length > 50 ? `<div class="search-meta" style="text-align:center; padding: var(--space-md);">Showing 50 of ${results.length} results. Narrow your search to see more.</div>` : '');
     }
+
+    // Initialize from URL (enables shareable searches and JSON-LD SearchAction)
+    loadFromUrl();
   });
 </script>

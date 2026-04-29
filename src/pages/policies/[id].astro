@@ -67,7 +67,14 @@ const spectrumPct = ((enrichment.politicalLean + 2) / 4) * 100; // maps -2..+2 t
 
 ---
 <Base title={policy.title} description={policy.description || `${policy.type.charAt(0).toUpperCase() + policy.type.slice(1)} from ${policy.source_short} — ${policy.sectors.join(', ')}.`}>
-  <div class="policy-detail">
+  <div class="policy-detail" data-pagefind-body>
+    <span data-pagefind-meta={`title:${policy.title}`} class="visually-hidden"></span>
+    <span data-pagefind-meta={`type:${policy.type}`} class="visually-hidden"></span>
+    <span data-pagefind-meta={`source:${policy.source_short}`} class="visually-hidden"></span>
+    <span data-pagefind-meta={`date:${policy.date}`} class="visually-hidden"></span>
+    <span data-pagefind-filter={`sector:${policy.sectors.join('|')}`} class="visually-hidden"></span>
+    <span data-pagefind-filter={`type:${policy.type}`} class="visually-hidden"></span>
+    <span data-pagefind-filter={`source:${policy.source_short}`} class="visually-hidden"></span>
     <nav class="breadcrumb">
       <a href={base}>Home</a>
       <span class="bc-sep">/</span>
