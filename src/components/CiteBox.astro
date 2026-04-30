@@ -1,0 +1,224 @@
+---
+interface Props {
+  title: string;
+  source_name: string;
+  source_short: string;
+  date: string;
+  url: string;
+  type: string;
+}
+
+const { title, source_name, source_short, date, url, type } = Astro.props;
+const year = (date || '').slice(0, 4);
+const accessedDate = new Date().toISOString().slice(0, 10);
+const idAttr = `cite-${(url || title).replace(/[^a-zA-Z0-9]/g, '').slice(0, 16)}`;
+---
+<details class="cite-box" id={idAttr}>
+  <summary class="cite-toggle">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7"/>
+      <path d="M9 11h6"/>
+      <path d="M9 15h6"/>
+      <path d="M3 7l9-4 9 4"/>
+    </svg>
+    <span>Cite this</span>
+    <span class="cite-chev" aria-hidden="true">▾</span>
+  </summary>
+
+  <div class="cite-tabs" role="tablist">
+    <button class="cite-tab active" data-cite-tab="apa" role="tab" aria-selected="true">APA</button>
+    <button class="cite-tab" data-cite-tab="chicago" role="tab" aria-selected="false">Chicago</button>
+    <button class="cite-tab" data-cite-tab="mla" role="tab" aria-selected="false">MLA</button>
+    <button class="cite-tab" data-cite-tab="bibtex" role="tab" aria-selected="false">BibTeX</button>
+  </div>
+
+  <div class="cite-pane">
+    <pre class="cite-text" id={`${idAttr}-out`}></pre>
+    <button class="cite-copy" type="button" aria-label="Copy citation to clipboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+        <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+      </svg>
+      <span>Copy</span>
+    </button>
+  </div>
+  <p class="cite-note">Citations are auto-generated; verify before publishing. The <code>{type}</code> classification is PolicyDhara's, not the source's.</p>
+</details>
+
+<script define:vars={{ idAttr, title, source_name, source_short, year, accessedDate, url, type }}>
+  document.addEventListener('DOMContentLoaded', () => {
+    const root = document.getElementById(idAttr);
+    if (!root) return;
+    const out = document.getElementById(`${idAttr}-out`);
+    const tabs = root.querySelectorAll('.cite-tab');
+    const copyBtn = root.querySelector('.cite-copy');
+
+    function bibKey() {
+      const slug = (title || '').toLowerCase().replace(/[^a-z0-9]+/g, '').slice(0, 24);
+      return `policydhara_${slug || 'policy'}_${year || 'nd'}`;
+    }
+
+    function format(style) {
+      const yr = year || 'n.d.';
+      const u = url || `https://varnasr.github.io/PolicyDhara/`;
+      const src = source_name || source_short || 'PolicyDhara';
+      const accessed = new Date(accessedDate).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+
+      switch (style) {
+        case 'apa':
+          // APA 7: Author. (Year). Title [Type]. Source. URL
+          return `${src}. (${yr}). ${title} [${type}]. PolicyDhara. ${u}`;
+        case 'chicago':
+          // Chicago author-date: Author. Year. "Title." Source. URL.
+          return `${src}. ${yr}. "${title}." PolicyDhara. ${u}.`;
+        case 'mla':
+          // MLA 9: Author. "Title." Source, Year, URL. Accessed Date.
+          return `${src}. "${title}." PolicyDhara, ${yr}, ${u}. Accessed ${accessed}.`;
+        case 'bibtex':
+          return [
+            `@misc{${bibKey()},`,
+            `  title  = {${title.replace(/[{}]/g, '')}},`,
+            `  author = {{${src}}},`,
+            `  year   = {${yr}},`,
+            `  note   = {${type}, accessed via PolicyDhara},`,
+            `  url    = {${u}},`,
+            `}`,
+          ].join('\n');
+      }
+      return '';
+    }
+
+    function setStyle(style) {
+      tabs.forEach(t => {
+        const active = t.dataset.citeTab === style;
+        t.classList.toggle('active', active);
+        t.setAttribute('aria-selected', active ? 'true' : 'false');
+      });
+      out.textContent = format(style);
+    }
+
+    tabs.forEach(t => t.addEventListener('click', () => setStyle(t.dataset.citeTab)));
+    setStyle('apa');
+
+    copyBtn?.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(out.textContent || '');
+        const orig = copyBtn.innerHTML;
+        copyBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg><span>Copied</span>';
+        copyBtn.classList.add('cite-copied');
+        setTimeout(() => {
+          copyBtn.innerHTML = orig;
+          copyBtn.classList.remove('cite-copied');
+        }, 1500);
+      } catch {}
+    });
+  });
+</script>
+
+<style>
+  .cite-box {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-white);
+    margin: var(--space-md) 0;
+  }
+  .cite-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    cursor: pointer;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-text);
+    list-style: none;
+    user-select: none;
+  }
+  .cite-toggle::-webkit-details-marker { display: none; }
+  .cite-toggle svg { width: 16px; height: 16px; color: var(--color-accent); }
+  .cite-chev { margin-left: auto; color: var(--color-text-muted); transition: transform 0.15s; font-size: 0.75rem; }
+  .cite-box[open] .cite-chev { transform: rotate(180deg); }
+  .cite-tabs {
+    display: flex;
+    gap: 0;
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-bg-alt);
+  }
+  .cite-tab {
+    flex: 1;
+    background: transparent;
+    border: none;
+    border-right: 1px solid var(--color-border);
+    padding: 8px 12px;
+    font: inherit;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .cite-tab:last-child { border-right: none; }
+  .cite-tab:hover { background: var(--color-bg-white); }
+  .cite-tab.active {
+    background: var(--color-bg-white);
+    color: var(--color-accent);
+    box-shadow: inset 0 -2px 0 var(--color-accent);
+  }
+  .cite-pane {
+    position: relative;
+    padding: 14px;
+  }
+  .cite-text {
+    margin: 0;
+    padding: 12px 40px 12px 12px;
+    font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+    font-size: 0.75rem;
+    line-height: 1.6;
+    color: var(--color-text);
+    background: var(--color-bg-alt);
+    border-radius: var(--radius-sm);
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-x: auto;
+  }
+  .cite-copy {
+    position: absolute;
+    top: 22px;
+    right: 22px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-white);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    transition: all 0.15s;
+  }
+  .cite-copy svg { width: 12px; height: 12px; }
+  .cite-copy:hover { color: var(--color-accent); border-color: var(--color-accent); }
+  .cite-copy.cite-copied {
+    color: #16a34a;
+    border-color: #16a34a;
+    background: #f0fdf4;
+  }
+  .cite-note {
+    margin: 0;
+    padding: 0 14px 12px;
+    font-size: 0.6875rem;
+    color: var(--color-text-muted);
+    line-height: 1.5;
+  }
+  .cite-note code {
+    font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+    font-size: 0.6875rem;
+    background: var(--color-bg-alt);
+    padding: 1px 4px;
+    border-radius: 3px;
+  }
+</style>

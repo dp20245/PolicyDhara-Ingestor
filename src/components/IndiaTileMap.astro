@@ -1,0 +1,305 @@
+---
+/**
+ * Hex-grid tile map of India — data-journalism style.
+ * Each state/UT is a cell positioned roughly geographically.
+ * Color encodes the ruling party's lean; click navigates to /states/[slug].
+ */
+import { getStatePolicySummary, getStateSlug, getStateGovernments } from '../lib/data';
+
+const rawBase = import.meta.env.BASE_URL;
+const base = rawBase.endsWith('/') ? rawBase : rawBase + '/';
+
+// Grid: row 0 = far north, row 9 = far south
+// Col 0 = far west, col 12 = far east
+// Coordinates approximate the geographic position of each state
+type Cell = { name: string; abbr: string; row: number; col: number };
+
+const GRID: Cell[] = [
+  // Row 0 — far north
+  { name: 'Ladakh', abbr: 'LA', row: 0, col: 3 },
+
+  // Row 1 — north
+  { name: 'Jammu & Kashmir', abbr: 'JK', row: 1, col: 3 },
+  { name: 'Himachal Pradesh', abbr: 'HP', row: 1, col: 4 },
+  { name: 'Arunachal Pradesh', abbr: 'AR', row: 1, col: 11 },
+
+  // Row 2 — Punjab/Uttarakhand belt
+  { name: 'Punjab', abbr: 'PB', row: 2, col: 3 },
+  { name: 'Chandigarh', abbr: 'CH', row: 2, col: 4 },
+  { name: 'Uttarakhand', abbr: 'UK', row: 2, col: 5 },
+  { name: 'Sikkim', abbr: 'SK', row: 2, col: 9 },
+  { name: 'Assam', abbr: 'AS', row: 2, col: 10 },
+  { name: 'Nagaland', abbr: 'NL', row: 2, col: 11 },
+
+  // Row 3 — Delhi/UP belt
+  { name: 'Haryana', abbr: 'HR', row: 3, col: 4 },
+  { name: 'Delhi', abbr: 'DL', row: 3, col: 5 },
+  { name: 'Uttar Pradesh', abbr: 'UP', row: 3, col: 6 },
+  { name: 'Bihar', abbr: 'BR', row: 3, col: 8 },
+  { name: 'Meghalaya', abbr: 'ML', row: 3, col: 9 },
+  { name: 'Manipur', abbr: 'MN', row: 3, col: 10 },
+  { name: 'Mizoram', abbr: 'MZ', row: 3, col: 11 },
+
+  // Row 4 — central
+  { name: 'Rajasthan', abbr: 'RJ', row: 4, col: 3 },
+  { name: 'Madhya Pradesh', abbr: 'MP', row: 4, col: 5 },
+  { name: 'Jharkhand', abbr: 'JH', row: 4, col: 7 },
+  { name: 'West Bengal', abbr: 'WB', row: 4, col: 8 },
+  { name: 'Tripura', abbr: 'TR', row: 4, col: 9 },
+
+  // Row 5 — west/central
+  { name: 'Gujarat', abbr: 'GJ', row: 5, col: 2 },
+  { name: 'Dadra & Nagar Haveli and Daman & Diu', abbr: 'DN', row: 5, col: 3 },
+  { name: 'Chhattisgarh', abbr: 'CG', row: 5, col: 6 },
+  { name: 'Odisha', abbr: 'OD', row: 5, col: 7 },
+
+  // Row 6 — Maharashtra belt
+  { name: 'Maharashtra', abbr: 'MH', row: 6, col: 3 },
+  { name: 'Telangana', abbr: 'TS', row: 6, col: 5 },
+  { name: 'Andhra Pradesh', abbr: 'AP', row: 6, col: 6 },
+
+  // Row 7 — south-central
+  { name: 'Goa', abbr: 'GA', row: 7, col: 3 },
+  { name: 'Karnataka', abbr: 'KA', row: 7, col: 4 },
+  { name: 'Puducherry', abbr: 'PY', row: 7, col: 6 },
+  { name: 'Andaman & Nicobar Islands', abbr: 'AN', row: 7, col: 11 },
+
+  // Row 8 — south
+  { name: 'Lakshadweep', abbr: 'LD', row: 8, col: 2 },
+  { name: 'Kerala', abbr: 'KL', row: 8, col: 4 },
+  { name: 'Tamil Nadu', abbr: 'TN', row: 8, col: 5 },
+];
+
+const summary = getStatePolicySummary();
+const govs = getStateGovernments();
+
+// Build a lookup of name -> { count, lean, party, label, slug }
+const dataByName: Record<string, { count: number; lean: number; party: string; label: string; slug: string }> = {};
+for (const s of summary) {
+  const gov = govs.find(g => g.name === s.name);
+  dataByName[s.name] = {
+    count: s.count,
+    lean: gov?.lean ?? 0,
+    party: s.party,
+    label: s.label,
+    slug: s.slug,
+  };
+}
+
+// Match GRID cells (which use simplified names) to data (which uses canonical names)
+function findData(name: string) {
+  if (dataByName[name]) return dataByName[name];
+  // Aliases
+  const aliases: Record<string, string> = {
+    'Jammu & Kashmir': 'Jammu and Kashmir',
+    'Andaman & Nicobar Islands': 'Andaman and Nicobar Islands',
+    'Dadra & Nagar Haveli and Daman & Diu': 'Dadra and Nagar Haveli and Daman and Diu',
+  };
+  const aliased = aliases[name];
+  if (aliased && dataByName[aliased]) return dataByName[aliased];
+  return null;
+}
+
+const LEAN_COLOR: Record<string, string> = {
+  'Left': '#dc2626',
+  'Centre-Left': '#f97316',
+  'Centre': '#737373',
+  'Centre-Right': '#3b82f6',
+  'Right': '#1d4ed8',
+};
+
+const TILE = 56; // px per cell
+const GAP = 4;
+const MAX_COL = 12;
+const MAX_ROW = 9;
+const W = (MAX_COL + 1) * (TILE + GAP) + GAP;
+const H = (MAX_ROW + 1) * (TILE + GAP) + GAP;
+---
+<div class="india-tilemap">
+  <div class="tilemap-head">
+    <div class="tilemap-title">
+      <h3>States &amp; UTs</h3>
+      <span class="tilemap-sub">Tile map · positions are approximate · click to drill in</span>
+    </div>
+    <div class="tilemap-legend">
+      {Object.entries(LEAN_COLOR).map(([label, color]) => (
+        <span class="tm-legend-item">
+          <span class="tm-legend-swatch" style={`background: ${color};`}></span>
+          {label}
+        </span>
+      ))}
+    </div>
+  </div>
+  <div class="tilemap-svg-wrap">
+    <svg viewBox={`0 0 ${W} ${H}`} class="tilemap-svg" role="img" aria-label="Tile map of Indian states and union territories">
+      {GRID.map(cell => {
+        const x = GAP + cell.col * (TILE + GAP);
+        const y = GAP + cell.row * (TILE + GAP);
+        const d = findData(cell.name);
+        const fill = d ? (LEAN_COLOR[d.label] || '#888') : '#d4d4d4';
+        const slug = d?.slug || getStateSlug(cell.name);
+        const count = d?.count ?? 0;
+        const party = d?.party ?? 'Unknown';
+        return (
+          <a href={`${base}states/${slug}/`} class="tm-cell-link" data-state={cell.name} data-count={count} data-party={party}>
+            <rect
+              x={x}
+              y={y}
+              width={TILE}
+              height={TILE}
+              rx="6"
+              fill={fill}
+              fill-opacity="0.9"
+              class="tm-cell"
+            />
+            <text
+              x={x + TILE / 2}
+              y={y + TILE / 2 - 4}
+              class="tm-cell-abbr"
+            >{cell.abbr}</text>
+            <text
+              x={x + TILE / 2}
+              y={y + TILE / 2 + 14}
+              class="tm-cell-count"
+            >{count > 0 ? count : ''}</text>
+          </a>
+        );
+      })}
+    </svg>
+  </div>
+  <div class="tilemap-tooltip" id="tilemap-tooltip" role="status" aria-live="polite"></div>
+</div>
+
+<style>
+  .india-tilemap {
+    background: var(--color-bg-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-md) var(--space-lg);
+    margin: var(--space-md) 0 var(--space-lg);
+    box-shadow: var(--shadow-card);
+  }
+  .tilemap-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-sm);
+  }
+  .tilemap-title h3 {
+    font-family: 'Newsreader', Georgia, serif;
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 2px 0;
+    color: var(--color-text);
+  }
+  .tilemap-sub {
+    font-size: 0.6875rem;
+    color: var(--color-text-muted);
+  }
+  .tilemap-legend {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-size: 0.6875rem;
+    color: var(--color-text-muted);
+  }
+  .tm-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .tm-legend-swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+  }
+  .tilemap-svg-wrap {
+    overflow-x: auto;
+  }
+  .tilemap-svg {
+    display: block;
+    width: 100%;
+    max-width: 760px;
+    height: auto;
+    margin: 0 auto;
+  }
+  .tm-cell {
+    transition: fill-opacity 0.15s, transform 0.15s;
+    transform-origin: center;
+    transform-box: fill-box;
+  }
+  .tm-cell-link:hover .tm-cell {
+    fill-opacity: 1;
+    transform: scale(1.06);
+  }
+  .tm-cell-link:focus { outline: none; }
+  .tm-cell-link:focus-visible .tm-cell {
+    stroke: var(--color-accent);
+    stroke-width: 2;
+  }
+  .tm-cell-abbr {
+    text-anchor: middle;
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    fill: white;
+    pointer-events: none;
+    user-select: none;
+  }
+  .tm-cell-count {
+    text-anchor: middle;
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-weight: 500;
+    font-size: 10px;
+    fill: rgba(255, 255, 255, 0.85);
+    pointer-events: none;
+    user-select: none;
+  }
+  .tilemap-tooltip {
+    margin-top: var(--space-sm);
+    min-height: 1.4em;
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    text-align: center;
+  }
+  .tilemap-tooltip.visible {
+    color: var(--color-text);
+  }
+
+  @media (max-width: 720px) {
+    .india-tilemap { padding: var(--space-sm); }
+    .tilemap-head { flex-direction: column; align-items: flex-start; }
+    .tilemap-legend { font-size: 0.625rem; gap: 6px; }
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const tooltip = document.getElementById('tilemap-tooltip');
+    if (!tooltip) return;
+
+    document.querySelectorAll('.tm-cell-link').forEach(link => {
+      const el = link as HTMLElement;
+      const show = () => {
+        const name = el.dataset.state || '';
+        const count = el.dataset.count || '0';
+        const party = el.dataset.party || '';
+        tooltip.textContent = `${name} — ${count} ${count === '1' ? 'policy' : 'policies'} · ${party}`;
+        tooltip.classList.add('visible');
+      };
+      const hide = () => {
+        tooltip.textContent = 'Hover or focus a tile to see details · click to open';
+        tooltip.classList.remove('visible');
+      };
+      link.addEventListener('mouseenter', show);
+      link.addEventListener('focus', show);
+      link.addEventListener('mouseleave', hide);
+      link.addEventListener('blur', hide);
+    });
+
+    // initialize default text
+    tooltip.textContent = 'Hover or focus a tile to see details · click to open';
+  });
+</script>

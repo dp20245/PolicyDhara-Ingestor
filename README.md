@@ -97,6 +97,21 @@ It is designed for researchers, journalists, advocates, and practitioners who ne
 | Policy data refresh | Every 6 hours | `update-policies.yml` (GitHub Actions) |
 | Site deploy | On data commit | `deploy.yml` (GitHub Pages) |
 | PyPI package publish | On release | `publish-pypi.yml` |
+| Newsletter (optional) | On data refresh | `scripts/send_newsletter.py` (Buttondown) |
+| Telegram alerts (optional) | On data refresh | `scripts/push_telegram.py` |
+
+### Optional integrations
+
+Both run as best-effort steps in `update-policies.yml` and skip silently if the relevant secrets are not set.
+
+**Buttondown newsletter** — set `BUTTONDOWN_API_KEY` as a GitHub Secret.
+
+**Telegram alerts** for high-priority new policies — set:
+
+- `TELEGRAM_BOT_TOKEN` — from [@BotFather](https://t.me/BotFather) (`/newbot`)
+- `TELEGRAM_CHAT_ID` — channel `@username` (e.g. `@policydhara`) or numeric chat id
+
+Add the bot as an administrator on the channel with "Post Messages" permission. Test locally with `python3 scripts/push_telegram.py --dry-run`.
 
 ---
 
