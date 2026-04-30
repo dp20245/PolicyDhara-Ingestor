@@ -1,5 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
+import IndiaTileMap from '../../components/IndiaTileMap.astro';
 import { getStateGovernments, getStatePolicySummary, getStateSlug, getAllStateProfiles } from '../../lib/data';
 
 const rawBase = import.meta.env.BASE_URL;
@@ -61,6 +62,9 @@ for (const s of states) {
         </span>
       ))}
     </div>
+
+    {/* India tile map */}
+    <IndiaTileMap />
 
     {/* States grid */}
     <h3 class="section-title">States ({states.length})</h3>
