@@ -12,6 +12,15 @@ const TREND_COLORS: Record<string, string> = {
 
 const topCorrelations = brief.correlations.slice(0, 5);
 const topMomentum = brief.momentum.slice(0, 6);
+
+// Whether we have enough historical depth to draw "vs prior period" comparisons.
+// If the prior 30-day window is empty across the visible momentum rows, the
+// comparison is mechanically forced to "surging" everywhere and is not useful;
+// we render an explainer instead. This happens right after the date-migration
+// when most items have first_seen in the same recent window.
+const totalPrior = topMomentum.reduce((sum, m) => sum + m.prev30, 0);
+const totalRecent = topMomentum.reduce((sum, m) => sum + m.last30, 0);
+const hasMomentumHistory = totalPrior > 0 && totalPrior >= 0.05 * totalRecent;
 ---
 
 <div class="intel-section">
@@ -35,20 +44,30 @@ const topMomentum = brief.momentum.slice(0, 6);
     <div class="intel-card">
       <h4>Sector Momentum</h4>
       <p class="intel-card-sub">Activity velocity: last 30 days vs prior 30 days</p>
-      <div class="momentum-list">
-        {topMomentum.map(m => (
-          <div class="momentum-row">
-            <span class="momentum-trend" style={`color: ${TREND_COLORS[m.trend]};`}>
-              {TREND_ICONS[m.trend]}
-            </span>
-            <span class="momentum-sector">{m.sector}</span>
-            <span class="momentum-counts">{m.last30} / {m.prev30}</span>
-            <span class="momentum-label" style={`background: ${TREND_COLORS[m.trend]}20; color: ${TREND_COLORS[m.trend]};`}>
-              {m.trend}
-            </span>
-          </div>
-        ))}
-      </div>
+      {hasMomentumHistory ? (
+        <div class="momentum-list">
+          {topMomentum.map(m => (
+            <div class="momentum-row">
+              <span class="momentum-trend" style={`color: ${TREND_COLORS[m.trend]};`}>
+                {TREND_ICONS[m.trend]}
+              </span>
+              <span class="momentum-sector">{m.sector}</span>
+              <span class="momentum-counts">{m.last30} / {m.prev30}</span>
+              <span class="momentum-label" style={`background: ${TREND_COLORS[m.trend]}20; color: ${TREND_COLORS[m.trend]};`}>
+                {m.trend}
+              </span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div class="intel-explainer">
+          <strong>Not enough history yet.</strong>
+          The dataset's <code>first_seen</code> dates are still mostly clustered
+          in the last few days, so a meaningful 30-vs-prior-30 comparison isn't
+          possible. Counts in the last 30 days: <em>{topMomentum.map(m => `${m.sector} ${m.last30}`).slice(0, 3).join(' · ')}</em>.
+          Momentum will populate after a few weeks of regular fetches.
+        </div>
+      )}
     </div>
 
     {/* Legislative Pipeline */}
@@ -223,6 +242,30 @@ const topMomentum = brief.momentum.slice(0, 6);
     color: var(--color-text-dim);
     margin-bottom: var(--space-md);
     line-height: 1.4;
+  }
+  .intel-explainer {
+    padding: var(--space-md);
+    background: var(--color-bg-alt);
+    border-radius: var(--radius-md);
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    color: var(--color-text-muted);
+  }
+  .intel-explainer strong {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--color-text);
+  }
+  .intel-explainer code {
+    background: var(--color-bg-white);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-family: ui-monospace, monospace;
+    font-size: 0.75rem;
+  }
+  .intel-explainer em {
+    font-style: normal;
+    color: var(--color-text);
   }
 
   /* Momentum */

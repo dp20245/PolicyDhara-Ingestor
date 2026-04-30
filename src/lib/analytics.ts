@@ -9,6 +9,12 @@
  * - Emerging vs declining sectors
  * - Source diversity scoring
  * - Legislative pipeline signals
+ *
+ * Time-based metrics use `first_seen` (when PolicyDhara ingested the
+ * item) as the time signal, falling back to `date` (issuance date) when
+ * present. Most sources don't expose a real publication date so `date`
+ * is empty for the majority of items — see scripts/migrate_dates.py
+ * for the rationale.
  */
 
 import { getAllPolicies, type PolicyItem } from './data';
@@ -21,9 +27,18 @@ function daysAgo(n: number): Date {
   return new Date(Date.now() - n * DAY_MS);
 }
 
+/** Effective time signal for analytics — see file header. */
+function policyTime(p: PolicyItem): number | null {
+  const ref = p.first_seen || p.date;
+  if (!ref) return null;
+  const t = new Date(ref).getTime();
+  return Number.isNaN(t) ? null : t;
+}
+
 function inRange(p: PolicyItem, start: Date, end: Date): boolean {
-  const d = new Date(p.date);
-  return d >= start && d <= end;
+  const t = policyTime(p);
+  if (t === null) return false;
+  return t >= start.getTime() && t <= end.getTime();
 }
 
 function mean(arr: number[]): number {
@@ -102,10 +117,12 @@ export interface WeeklyAnomaly {
 export function getWeeklyAnomalies(): WeeklyAnomaly[] {
   const all = getAllPolicies();
 
-  // Bucket by ISO week
+  // Bucket by ISO week using first_seen (or date as fallback)
   const weekly: Record<string, number> = {};
   for (const p of all) {
-    const d = new Date(p.date);
+    const t = policyTime(p);
+    if (t === null) continue;
+    const d = new Date(t);
     const year = d.getFullYear();
     const jan1 = new Date(year, 0, 1);
     const weekNum = Math.ceil(((d.getTime() - jan1.getTime()) / DAY_MS + jan1.getDay() + 1) / 7);
@@ -342,17 +359,30 @@ export function generateIntelligenceBrief(): IntelligenceBrief {
   const sourceDiversity = getSourceDiversity();
   const pipeline = getLegislativePipeline();
 
+  // Detect whether the dataset has enough historical depth to make
+  // velocity-style claims. Right after the date migration, prev30 is 0
+  // for every sector so every sector reads as "surging" — that's a
+  // measurement artefact, not a real signal. Suppress those headlines
+  // until the data builds up.
+  const totalPrior30 = momentum.reduce((s, m) => s + m.prev30, 0);
+  const totalLast30 = momentum.reduce((s, m) => s + m.last30, 0);
+  const hasComparablePrior = totalPrior30 > 0 && totalPrior30 >= 0.05 * totalLast30;
+
   // Generate narrative headlines
   const headlines: string[] = [];
 
-  if (surgingSectors.length > 0) {
+  if (hasComparablePrior && surgingSectors.length > 0) {
     const top = surgingSectors[0];
     headlines.push(`${top.sector} policy activity ${top.trend === 'surging' ? 'surging' : 'rising'} — ${top.last30} updates in 30 days (${Math.round((top.velocity - 1) * 100)}% increase)`);
   }
 
-  if (coolingSectors.length > 0) {
+  if (hasComparablePrior && coolingSectors.length > 0) {
     const top = coolingSectors[0];
     headlines.push(`${top.sector} attention declining — down ${Math.round((1 - top.velocity) * 100)}% from prior period`);
+  }
+
+  if (!hasComparablePrior) {
+    headlines.push(`Most active sector last 30 days: ${momentum[0]?.sector ?? '—'} (${momentum[0]?.last30 ?? 0} items). "Versus prior period" comparisons will populate after more fetches.`);
   }
 
   if (pipeline.recentBills > 3) {
