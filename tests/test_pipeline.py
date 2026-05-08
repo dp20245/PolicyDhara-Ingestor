@@ -195,6 +195,70 @@ class TestFirstSeenStamping:
         )
 
 
+class TestSourcesWired:
+    """Lock the wiring for PIB ministry-filtered sources. Each source must
+    point at a unique MinId on the PIB Allrel.aspx listing, and the scraper
+    must route through scrape_pib (not the scrape_ministry default — the
+    selectors differ).
+    """
+
+    @pytest.fixture(scope="class")
+    def feeds(self):
+        feeds_path = Path(__file__).resolve().parent.parent / "feeds.json"
+        return json.loads(feeds_path.read_text())
+
+    @pytest.fixture(scope="class")
+    def fetch_scrape(self):
+        from importlib.util import spec_from_file_location, module_from_spec
+
+        spec = spec_from_file_location("fetch_scrape", SCRIPTS_DIR / "fetch_scrape.py")
+        mod = module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def test_pib_eci_source_defined(self, feeds):
+        src = feeds["sources"].get("pib_eci")
+        assert src is not None
+        assert "MinId=35" in src["url"]
+
+    def test_pib_ministry_sources_have_unique_minids(self, feeds):
+        import re
+
+        seen_minids: dict[str, str] = {}
+        for key, src in feeds["sources"].items():
+            url = src.get("url", "")
+            # Only check ministry-filtered listings
+            if "Allrel.aspx" not in url:
+                continue
+            match = re.search(r"MinId=(\d+)", url)
+            assert match, f"{key} on Allrel.aspx but missing MinId: {url}"
+            minid = match.group(1)
+            assert minid not in seen_minids, (
+                f"MinId={minid} collision: {key} and {seen_minids[minid]} "
+                f"would fetch the same content"
+            )
+            seen_minids[minid] = key
+
+    def test_pib_prefixed_sources_route_to_scrape_pib(self, feeds, fetch_scrape):
+        """Any pib_* source either has an explicit SOURCE_SCRAPERS entry
+        or falls through to the pib_-prefix default — both must end up at
+        scrape_pib, never scrape_ministry."""
+
+        def resolve_scraper(source_id: str):
+            if source_id in fetch_scrape.SOURCE_SCRAPERS:
+                return fetch_scrape.SOURCE_SCRAPERS[source_id]
+            if source_id.startswith("pib_"):
+                return fetch_scrape.scrape_pib
+            return fetch_scrape.scrape_ministry
+
+        for key in feeds["sources"]:
+            if not key.startswith("pib_"):
+                continue
+            assert resolve_scraper(key) is fetch_scrape.scrape_pib, (
+                f"{key} resolves to scrape_ministry — PRID-based links won't be picked up"
+            )
+
+
 class TestMessageFormatting:
     def test_html_escapes_special_chars(self, pipeline):
         msg = pipeline["telegram"].format_message(

@@ -637,6 +637,7 @@ def scrape_orf(config: dict) -> list[dict]:
 
 SOURCE_SCRAPERS = {
     "pib": scrape_pib,
+    "pib_eci": scrape_pib,
     "india_code": scrape_india_code,
     "egazette": scrape_egazette,
     "niti_aayog": scrape_niti_aayog,
@@ -961,7 +962,12 @@ def fetch_scrape_source(source_id: str, config: dict) -> list[dict]:
     If the scraper returns zero results, attempt RSS auto-discovery on the
     same page and parse the feed as a fallback.
     """
-    scraper = SOURCE_SCRAPERS.get(source_id, scrape_ministry)
+    # Any source whose id starts with `pib_` is a PIB ministry-filtered listing
+    # and uses the same DOM/selectors as the firehose `pib` source — route to
+    # scrape_pib by default so adding a new `pib_<ministry>` to feeds.json
+    # doesn't need a corresponding entry in SOURCE_SCRAPERS.
+    default = scrape_pib if source_id.startswith("pib_") else scrape_ministry
+    scraper = SOURCE_SCRAPERS.get(source_id, default)
     results = scraper(config)
 
     if results:
