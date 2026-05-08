@@ -51,11 +51,15 @@ def save_snapshot():
 
 
 def find_new_policies() -> list[dict]:
-    """Compare current policies against snapshot to find new ones."""
+    """Compare current policies against snapshot to find new ones.
+
+    Returns [] if no snapshot exists. The CI workflow always writes a
+    pre-fetch snapshot via --snapshot-only before any consumer runs;
+    a missing snapshot means there's nothing to diff against.
+    """
     old_ids = load_snapshot()
     if not old_ids:
-        print("  No previous snapshot found — saving current state (no email this run)")
-        save_snapshot()
+        print("  No previous snapshot found — nothing to diff this run")
         return []
 
     with open(POLICIES_FILE) as f:
@@ -345,7 +349,6 @@ def main():
 
     if not new_policies:
         print("  No new policies — no email to send")
-        save_snapshot()
         return
 
     # --sector SLUG: send a single sector-filtered email
@@ -358,7 +361,6 @@ def main():
         filtered = filter_by_sector(new_policies, sector_slug)
         if not filtered:
             print(f"  No new policies in sector '{sector_slug}'")
-            save_snapshot()
             return
         # Find display name from first matching policy
         sector_name = sector_slug
@@ -373,14 +375,12 @@ def main():
         print(f"  Subject: {subject}")
         metadata = {"sectors": [sector_slug], "type": "sector_alert"}
         send_via_buttondown(subject, body, draft=draft, metadata=metadata)
-        save_snapshot()
         print("  Done!")
         return
 
     # --sector-alerts: send per-sector digests for all sectors with new policies
     if "--sector-alerts" in sys.argv:
         send_sector_alerts(new_policies, draft=draft)
-        save_snapshot()
         print("  Done!")
         return
 
@@ -403,9 +403,6 @@ def main():
         "type": "daily_digest",
     }
     send_via_buttondown(subject, body, draft=draft, metadata=metadata)
-
-    # Update snapshot after successful send
-    save_snapshot()
     print("  Done!")
 
 
