@@ -1,0 +1,29 @@
+name: Scrape Policy Data Manually
+
+on:
+  workflow_dispatch: # This removes the schedule and allows manual/API triggers only
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: pip install -r scripts/requirements.txt
+
+      - name: Run fetcher
+        run: python3 scripts/fetch_all.py
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/ src/content/policies/
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update legislative data" && git push origin master)
