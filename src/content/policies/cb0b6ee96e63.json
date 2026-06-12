@@ -1,0 +1,24 @@
+{
+  "id": "cb0b6ee96e63",
+  "title": "The Indian workers training AI robots to take their jobs",
+  "description": "Developers think feeding first-person footage, called \"egocentric data\", into specialised AI models will help robots copy humans",
+  "link": "https://www.thehindu.com/sci-tech/technology/the-indian-workers-training-ai-robots-to-take-their-jobs/article71092120.ece",
+  "date": "2026-06-12",
+  "source_id": "the_hindu_policy",
+  "source_name": "The Hindu - National",
+  "source_short": "The Hindu",
+  "sectors": [
+    "Energy",
+    "Climate & Environment",
+    "Digital & Technology"
+  ],
+  "sector_slugs": [
+    "energy",
+    "climate-environment",
+    "digital-technology"
+  ],
+  "type": "policy",
+  "level": "media",
+  "state": "",
+  "first_seen": "2026-06-12"
+}
