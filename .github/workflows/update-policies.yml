@@ -2,27 +2,22 @@ name: Update Policy Data
 
 on:
   schedule:
-    - cron: '0 */6 * * *'
+    - cron: '0 */3 * * *'
   workflow_dispatch:
 
 permissions:
   contents: write
-  pull-requests: write
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
 
 jobs:
-  fetch-and-build:
+  fetch-and-commit:
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -36,7 +31,7 @@ jobs:
           pip install -r scripts/requirements.txt
           pip install -e ".[dev]"
 
-      - name: Run tests (gate auto-merge on green)
+      - name: Run tests
         run: pytest tests/ -q
 
       - name: Snapshot policy IDs (pre-fetch)
@@ -47,68 +42,10 @@ jobs:
         env:
           PYTHONUNBUFFERED: '1'
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '22'
-
-      - name: Install Node dependencies
-        run: npm install
-
-      - name: Build Astro site
-        run: npm run build
-
-      - name: Send newsletter if new policies found
-        if: env.BUTTONDOWN_API_KEY != ''
-        continue-on-error: true
-        run: python3 scripts/send_newsletter.py --draft
-        env:
-          BUTTONDOWN_API_KEY: ${{ secrets.BUTTONDOWN_API_KEY }}
-
-      - name: Send sector-specific alerts
-        if: env.BUTTONDOWN_API_KEY != ''
-        continue-on-error: true
-        run: python3 scripts/send_newsletter.py --sector-alerts --draft
-        env:
-          BUTTONDOWN_API_KEY: ${{ secrets.BUTTONDOWN_API_KEY }}
-
-      - name: Push Telegram alerts for high-priority new policies
-        if: env.TELEGRAM_BOT_TOKEN != ''
-        continue-on-error: true
-        run: python3 scripts/push_telegram.py
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-
-      - name: Create PR with updated data
-        id: create-pr
-        uses: peter-evans/create-pull-request@v7
-        with:
-          commit-message: "Chore: auto-update policy data"
-          branch: auto-update/policy-data
-          title: "Chore: auto-update policy data"
-          body: "Automated policy data refresh from scheduled workflow."
-          delete-branch: true
-
-      - name: Auto-merge PR
-        if: steps.create-pr.outputs.pull-request-number
-        run: gh pr merge ${{ steps.create-pr.outputs.pull-request-number }} --squash --delete-branch
-        env:
-          GH_TOKEN: ${{ github.token }}
-
-      - name: Upload artifact for GitHub Pages
-        uses: actions/upload-pages-artifact@v4
-        with:
-          path: ./dist
-
-  deploy:
-    needs: fetch-and-build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Commit updated data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/
+          git diff --cached --quiet || git commit -m "chore: auto-update policy data [skip ci]"
+          git push
