@@ -1,0 +1,24 @@
+{
+  "id": "611577f1e04e",
+  "title": "Indian Air Force transport plane crashes in Assam’s Jorhat",
+  "description": "",
+  "link": "https://indianexpress.com/article/india/indian-air-force-plane-crash-in-assam-jorhat-10737534/",
+  "date": "2026-06-13",
+  "source_id": "indian_express_policy",
+  "source_name": "Indian Express - India",
+  "source_short": "IE",
+  "sectors": [
+    "Transport & Infrastructure",
+    "Digital & Technology",
+    "Defence & Security"
+  ],
+  "sector_slugs": [
+    "transport-infrastructure",
+    "digital-technology",
+    "defence-security"
+  ],
+  "type": "policy",
+  "level": "media",
+  "state": "",
+  "first_seen": "2026-06-13"
+}
