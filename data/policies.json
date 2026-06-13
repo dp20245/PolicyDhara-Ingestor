@@ -15768,6 +15768,74 @@
     "first_seen": "2026-06-12"
   },
   {
+    "id": "e9c061d4d108",
+    "title": "Auction of State Government Securities",
+    "description": "The following State Governments have offered to sell stock by way of auction, for an aggregate amount of ₹21,600 Crore (Face Value). Sr. No. State/UT Amount to be raised (₹ Crore) Tenor (Year) Type of Auction 1. Andhra Pradesh 1000 06 Yield 1800 Re-issue of 7.79% Andhra Pradesh SGS 2042, issued on April 22, 2026 Price 1800 Re-issue of 7.81% Andhra Pradesh SGS 2056, issued on April 22, 2026 Price 2. Assam 1000 10 Yield 3. Gujarat 1000 08 Yield 1000 12 Yield 4. Jammu and Kashmir 500 Re",
+    "link": "http://www.rbi.org.in/scripts/BS_PressReleaseDisplay.aspx?prid=62928",
+    "date": "2026-06-12",
+    "source_id": "rbi",
+    "source_name": "Reserve Bank of India",
+    "source_short": "RBI",
+    "sectors": [
+      "Digital & Technology",
+      "Finance & Economy",
+      "Social Protection"
+    ],
+    "sector_slugs": [
+      "digital-technology",
+      "finance-economy",
+      "social-protection"
+    ],
+    "type": "policy",
+    "level": "central",
+    "state": "",
+    "first_seen": "2026-06-13"
+  },
+  {
+    "id": "8d7c4eca70a0",
+    "title": "Auction of 91-Day, 182-Day and 364-Day Treasury Bills",
+    "description": "Reserve Bank of India announces the auction of Government of India Treasury Bills as per the following details: Sr. No. Treasury Bill Notified Amount (₹ crore) Auction Date Settlement Date 1 91-Day 12,000 June 17, 2026 (Wednesday) June 18, 2026 (Thursday) 2 182-Day 6,000 3 364-Day 6,000   Total 24,000     The sale will be subject to the terms and conditions specified in the General Notification F.No.4(2)-B(W&M)/2018 dated March 26, 2025, issued by Government of India, as",
+    "link": "http://www.rbi.org.in/scripts/BS_PressReleaseDisplay.aspx?prid=62927",
+    "date": "2026-06-12",
+    "source_id": "rbi",
+    "source_name": "Reserve Bank of India",
+    "source_short": "RBI",
+    "sectors": [
+      "Digital & Technology",
+      "Finance & Economy"
+    ],
+    "sector_slugs": [
+      "digital-technology",
+      "finance-economy"
+    ],
+    "type": "legislation",
+    "level": "central",
+    "state": "",
+    "first_seen": "2026-06-13"
+  },
+  {
+    "id": "8ceaff4ecad3",
+    "title": "Reserve Bank of India – Bulletin Weekly Statistical Supplement – Extract",
+    "description": "1. Reserve Bank of India - Liabilities and Assets* (₹ Crore) Item 2025 2026 Variation Jun. 06 May 29 Jun. 05 Week Year 1 2 3 4 5 4 Loans and Advances           4.1 Central Government 0 0 0 0 0 4.2 State Governments 30444 10063 28330 18267 -2114 * Data are provisional; difference, if any, is due to rounding off. 2. Foreign Exchange Reserves* Item As on Jun. 05, 2026 Variation over Week End-March 2026 Year ₹ Cr. US$ Mn. ₹ Cr. US$ Mn. ₹ Cr. US$ Mn. &",
+    "link": "http://www.rbi.org.in/scripts/BS_PressReleaseDisplay.aspx?prid=62921",
+    "date": "2026-06-12",
+    "source_id": "rbi",
+    "source_name": "Reserve Bank of India",
+    "source_short": "RBI",
+    "sectors": [
+      "Digital & Technology",
+      "Social Protection"
+    ],
+    "sector_slugs": [
+      "digital-technology",
+      "social-protection"
+    ],
+    "type": "legislation",
+    "level": "central",
+    "state": "",
+    "first_seen": "2026-06-13"
+  },
+  {
     "id": "d51a8051274e",
     "title": "Hegseth Visits Guantanamo and Warns Cuba Against Seeking Weapons",
     "description": "Defense Secretary Pete Hegseth warned Cuba not to acquire armaments that could put the US military, or the US mainland, at risk.",
@@ -43537,72 +43605,6 @@
       "social-protection",
       "digital-technology",
       "finance-economy"
-    ],
-    "type": "policy",
-    "level": "media",
-    "state": "",
-    "first_seen": "2026-06-08"
-  },
-  {
-    "id": "3c9a613058b0",
-    "title": "44 women police constables pass out from Kerala Police Academy",
-    "description": "ADGP Dinendra Kashyap receives salute at parade",
-    "link": "https://www.thehindu.com/news/national/kerala/44-women-police-constables-pass-out-from-kerala-police-academy/article71076646.ece",
-    "date": "2026-06-08",
-    "source_id": "the_hindu_policy",
-    "source_name": "The Hindu - National",
-    "source_short": "The Hindu",
-    "sectors": [
-      "Social Protection",
-      "Gender & Women"
-    ],
-    "sector_slugs": [
-      "social-protection",
-      "gender-women"
-    ],
-    "type": "policy",
-    "level": "media",
-    "state": "",
-    "first_seen": "2026-06-08"
-  },
-  {
-    "id": "02f9ed099f0e",
-    "title": "‘Educated youth should become job givers’",
-    "description": "260 students awarded graduation certificates at Jain College of Engineering and Research convocation in Belagavi",
-    "link": "https://www.thehindu.com/news/national/karnataka/educated-youth-should-become-job-givers/article71073589.ece",
-    "date": "2026-06-08",
-    "source_id": "the_hindu_policy",
-    "source_name": "The Hindu - National",
-    "source_short": "The Hindu",
-    "sectors": [
-      "Education",
-      "Child Rights & Youth",
-      "Digital & Technology"
-    ],
-    "sector_slugs": [
-      "education",
-      "child-rights-youth",
-      "digital-technology"
-    ],
-    "type": "research",
-    "level": "media",
-    "state": "",
-    "first_seen": "2026-06-08"
-  },
-  {
-    "id": "efa4f3386191",
-    "title": "Ganja worth ₹1.47 crore incinerated in Khammam",
-    "description": "",
-    "link": "https://www.thehindu.com/news/national/telangana/ganja-worth-147-crore-incinerated-in-khammam/article71075888.ece",
-    "date": "2026-06-08",
-    "source_id": "the_hindu_policy",
-    "source_name": "The Hindu - National",
-    "source_short": "The Hindu",
-    "sectors": [
-      "Governance & Reform"
-    ],
-    "sector_slugs": [
-      "governance-reform"
     ],
     "type": "policy",
     "level": "media",
