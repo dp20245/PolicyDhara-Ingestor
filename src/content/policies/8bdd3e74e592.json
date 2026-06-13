@@ -1,0 +1,24 @@
+{
+  "id": "8bdd3e74e592",
+  "title": "May inflation stays below RBI target",
+  "description": "Retail inflation rose to 3.9% in May, the highest since January 2025, driven by food and transport, but remains below RBI’s 4% target.",
+  "link": "https://www.hindustantimes.com/india-news/may-inflation-stays-below-rbi-target-101781291226694.html",
+  "date": "2026-06-13",
+  "source_id": "hindustan_times",
+  "source_name": "Hindustan Times - India",
+  "source_short": "HT",
+  "sectors": [
+    "Finance & Economy",
+    "Transport & Infrastructure",
+    "Digital & Technology"
+  ],
+  "sector_slugs": [
+    "finance-economy",
+    "transport-infrastructure",
+    "digital-technology"
+  ],
+  "type": "policy",
+  "level": "media",
+  "state": "",
+  "first_seen": "2026-06-13"
+}
