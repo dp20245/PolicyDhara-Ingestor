@@ -32,7 +32,7 @@ POLICIES_DIR = PROJECT_ROOT / "src" / "content" / "policies"
 MAX_ITEMS_PER_SOURCE = 50
 MAX_TOTAL_ITEMS = 2000
 MAX_SOURCE_SECONDS = 30  # Per-source time limit (kills stuck fetches)
-MAX_PIPELINE_SECONDS = 720  # 12 minutes total (leave 3 min for build/deploy)
+MAX_PIPELINE_SECONDS = float("inf")  # No limit; GitHub Actions timeout is the hard cap
 HISTORICAL_SEED = PROJECT_ROOT / "data" / "historical_seed.json"
 
 
