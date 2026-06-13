@@ -1,73 +1,16 @@
-name: Deploy to GitHub Pages
+name: Deploy to GitHub Pages (disabled)
 
+# Dashboard removed — data is now committed directly to the repo as JSON.
+# This workflow is kept to avoid breaking references but will never trigger.
 on:
-  push:
-    branches: [master]
-    paths:
-      - 'src/**'
-      - 'public/**'
-      - 'data/**'
-      - 'astro.config.mjs'
-      - 'package.json'
-      - 'tsconfig.json'
-      - 'feeds.json'
-      - '.github/workflows/deploy.yml'
-  # Allow manual re-deploys from the Actions tab (handy when a previous
-  # change touched only a watched path but the deploy got skipped, or when
-  # rerunning after fixing a non-watched file like data/policies.json).
   workflow_dispatch:
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: true
+    inputs:
+      disabled:
+        description: 'This workflow is disabled'
+        required: false
 
 jobs:
-  build:
+  noop:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '22'
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build Astro site
-        run: npm run build
-
-      - name: Verify build output
-        run: |
-          test -f dist/index.html
-          test -f dist/rss.xml
-          test -d dist/policies
-          test -f dist/sitemap-index.xml
-          test -f dist/api/policies.json
-          test -d dist/_pagefind
-          echo "Pages built: $(find dist -name '*.html' | wc -l)"
-
-      - name: Upload artifact for GitHub Pages
-        uses: actions/upload-pages-artifact@v4
-        with:
-          path: ./dist
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - run: echo "Dashboard deploy removed. Data lives in data/*.json"
